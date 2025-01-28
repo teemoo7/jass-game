@@ -2,13 +2,11 @@ import { Team } from "../player/team";
 import { Player } from "../player/player.ts";
 import { Round } from "./round.ts";
 import { GameMode } from "./gamemode.ts";
-import { botPlayCard, delay, drawBoard, waitForHumanPlayer } from "../../ui/board.ts";
+import { botPlayCard, delay, drawBoard, drawTrumpDecisionDiv, waitForHumanPlayer } from "../../ui/board.ts";
 import { Meld } from "./meld.ts";
 import { Trick } from "./trick.ts";
 import { PlayedCard } from "./playedcard.ts";
 import { Card, CardHelper } from "../card/card.ts";
-import { Suit, SuitHelper } from "../card/suit.ts";
-import { Rank } from "../card/rank.ts";
 
 export class Game {
   readonly teams: Team[];
@@ -50,9 +48,10 @@ export class Game {
   }
 
   async roundStart(round: Round) {
+    drawBoard(this);
     const trumpDecider = round.trumpDecider;
     console.log(`Round ${round.number} started with ${trumpDecider.name} deciding the trump suit`);
-    round.trumpSuit = this.decideTrumpSuit(trumpDecider, round.playerHands.get(trumpDecider));
+    round.trumpSuit = trumpDecider.isHuman ? await drawTrumpDecisionDiv(round, trumpDecider, true) : await round.decideTrumpSuit(trumpDecider, true);
 
     let currentPlayer = trumpDecider;
 
@@ -73,7 +72,8 @@ export class Game {
             round.provisionalMelds.set(currentPlayer, meld);
           }
           if (playerIndex == 4 && round.provisionalMelds.size > 0) {
-            this.addWinningMeldsToTeamScores(round.provisionalMelds);
+            round.definitiveMelds = this.getWinningMelds(round.provisionalMelds);
+            this.addWinningMeldsToTeamScores(round.definitiveMelds);
             round.provisionalMelds.clear();
           }
         }
@@ -91,59 +91,28 @@ export class Game {
       }
 
       // compute trick winner
-      const computeWinningPlayedCard = round.currentTrick.computeWinningPlayedCard();
+      const winningPlayedCard = round.currentTrick.computeWinningPlayedCard();
 
       let trickScore = round.currentTrick.computeTrickScore();
       if (trickIndex == 9) {
         trickScore += 5;
       }
       console.log(
-        `${computeWinningPlayedCard!.player.name} won the trick with ${computeWinningPlayedCard!.card.rank} of ${computeWinningPlayedCard!.card.suit}, with a score of ${trickScore}`
+        `${winningPlayedCard!.player.name} won the trick with ${winningPlayedCard!.card.rank} of ${winningPlayedCard!.card.suit}, with a score of ${trickScore}`
       );
 
-      const team = this.getPlayerTeam(computeWinningPlayedCard!.player);
+      const team = this.getPlayerTeam(winningPlayedCard!.player);
       round.addScore(team, trickScore);
+
+      round.playedTricks.push(round.currentTrick);
 
       await delay();
 
-      currentPlayer = computeWinningPlayedCard!.player;
+      currentPlayer = winningPlayedCard!.player;
     }
     console.log(
       `Round ends with score: ${this.scores.get(this.teams[0])} - ${this.scores.get(this.teams[1])}`
     );
-  }
-
-  decideTrumpSuit(player: Player, hand: Card[]): Suit {
-
-    console.log(`${player.name} is deciding trump suit with hand: ${hand.map((card) => `${card.rank} of ${card.suit}`).join(", ")}`);
-
-    // compute valid candidates
-    let candidates: [Suit, number][] = [];
-
-    for (const suit of SuitHelper.getSuits()) {
-      const suitCards = hand.filter((card) => card.suit === suit);
-      if (
-        (suitCards.length >= 5 && suitCards.some((card) => card.rank === Rank.ACE)) ||
-        (suitCards.length >= 4 && suitCards.some((card) => card.rank === Rank.NINE)) ||
-        (suitCards.length >= 3 && suitCards.some((card) => card.rank === Rank.JACK))
-      ) {
-        candidates.push([suit, suitCards.reduce((power, card) => power + CardHelper.computeCardPower(card, true), 0)]);
-      }
-    }
-
-    console.log(`Candidates: ${candidates.map(([suit, power]) => `${suit}: ${power}`).join(", ")}`);
-
-    if (candidates.length == 0) {
-      //fixme: pass to teammate if possible
-      candidates = SuitHelper.getSuits().map((suit) => [suit, hand.filter((card) => card.suit === suit).reduce((power, card) => power + CardHelper.computeCardPower(card, true), 0)]);
-    }
-
-    // take the highest power within candidates
-    candidates.sort((a, b) => b[1] - a[1]);
-    const trumpSuit = candidates[0][0];
-
-    console.log(`${player.name} decided trump suit: ${trumpSuit}`);
-    return trumpSuit;
   }
 
   getNextPlayer(currentPlayer: Player): Player {
@@ -161,20 +130,31 @@ export class Game {
   }
 
   addWinningMeldsToTeamScores(melds: Map<Player, Meld>) {
+    for (const [player, meld] of melds.entries()) {
+      const team = this.getPlayerTeam(player);
+      this.addScore(team, meld.points);
+    }
+  }
+
+  getWinningMelds(melds: Map<Player, Meld>): Map<Player, Meld> {
     console.log(
       `Melds: ${Array.from(melds.entries())
         .map(([player, meld]) => `${player.name}: ${meld.points} points`)
         .join(", ")}`
     );
+    let winningMelds: Map<Player, Meld> = new Map();
     const [highestPlayer, highestMeld] = this.getHighestMeldEntry(melds);
     const team = this.getPlayerTeam(highestPlayer);
     for (const player of team.getPlayers()) {
       const playerMeld = melds.get(player);
-      this.addScore(team, playerMeld ? playerMeld.points : 0);
+      if (playerMeld) {
+        winningMelds.set(player, playerMeld);
+      }
     }
     console.log(
       `${highestPlayer.name} has the highest meld: ${highestMeld.type} of ${highestMeld.highestRank} worth ${highestMeld.points} points`
     );
+    return winningMelds;
   }
 
   getHighestMeldEntry(melds: Map<Player, Meld>): [Player, Meld] {

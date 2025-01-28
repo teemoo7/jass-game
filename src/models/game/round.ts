@@ -7,6 +7,7 @@ import { Rank, RankHelper } from "../card/rank.ts";
 import Utils from "../../utils/utils.ts";
 import { GameMode } from "./gamemode.ts";
 import { Meld } from "./meld.ts";
+import { drawTrumpDecisionDiv } from "../../ui/board.ts";
 
 export class Round {
   readonly number: number;
@@ -14,10 +15,13 @@ export class Round {
   readonly gameMode: GameMode;
   readonly scores: Map<Team, number>;
   currentTrick: Trick;
+  playedTricks: Trick[];
   trumpSuit: Suit;
   readonly trumpDecider: Player;
+  trumpDecisionPassed: boolean;
   readonly playerHands: Map<Player, Card[]>;
   provisionalMelds: Map<Player, Meld>;
+  definitiveMelds: Map<Player, Meld>;
 
   constructor(number: number, teams: Team[], gameMode: GameMode, trumpDecider?: Player) {
     this.number = number;
@@ -26,12 +30,15 @@ export class Round {
     this.scores = this.resetScores();
     this.playerHands = this.dealCardsToPlayers();
     this.sortHumanPlayerHand();
+    this.trumpDecisionPassed = false;
     if (trumpDecider) {
       this.trumpDecider = trumpDecider;
     } else {
       this.trumpDecider = this.computeStartingPlayer();
     }
     this.provisionalMelds = new Map();
+    this.definitiveMelds = new Map();
+    this.playedTricks = [];
   }
 
   resetScores(): Map<Team, number> {
@@ -116,6 +123,13 @@ export class Round {
       const suit = trickFirstCard.card.suit;
       const allowedCardsOfSuit = hand.filter((card) => card.suit === suit);
       allowedCards.push(...allowedCardsOfSuit);
+
+      if (allowedCardsOfSuit.length === 0) {
+        // Can play any non-trump card
+        const nonTrumpCards = hand.filter((card) => card.suit !== trumpSuit);
+        allowedCards.push(...nonTrumpCards);
+      }
+
     }
 
     // Can play trump card which are higher than the highest trump card played (if any)
@@ -168,4 +182,59 @@ export class Round {
     this.scores.set(team, score + this.scores.get(team));
   }
 
+  getPlayedTrumpCards(): Card[] {
+    return this.playedTricks
+      .flatMap((trick) => trick.playedCards)
+      .filter((playedCard) => playedCard.card.suit === this.trumpSuit)
+      .map((playedCard) => playedCard.card);
+  }
+  async decideTrumpSuit(player: Player, canPass: boolean): Promise<Suit> {
+    const hand: Card[] = this.playerHands.get(player);
+    console.log(`${player.name} is deciding trump suit with hand: ${hand.map((card) => `${card.rank} of ${card.suit}`).join(", ")}`);
+
+    // compute valid candidates
+    let candidates: [Suit, number][] = [];
+
+    for (const suit of SuitHelper.getSuits()) {
+      const suitCards = hand.filter((card) => card.suit === suit);
+      if (
+        (suitCards.length >= 5 && suitCards.some((card) => card.rank === Rank.ACE)) ||
+        (suitCards.length >= 4 && suitCards.some((card) => card.rank === Rank.NINE)) ||
+        (suitCards.length >= 3 && suitCards.some((card) => card.rank === Rank.JACK))
+      ) {
+        candidates.push([suit, suitCards.reduce((power, card) => power + CardHelper.computeCardPower(card, true), 0)]);
+      }
+    }
+
+    console.log(`Candidates: ${candidates.map(([suit, power]) => `${suit}: ${power}`).join(", ")}`);
+
+    if (candidates.length == 0) {
+      if (canPass) {
+        this.trumpDecisionPassed = true;
+        const teamMate = this.getTeamMate(player);
+        console.log(`${player.name} passed to ${teamMate.name}`);
+        let teamMateTrumpSuit: Suit;
+        if (teamMate.isHuman) {
+          teamMateTrumpSuit = await drawTrumpDecisionDiv(this, teamMate, false);
+        } else {
+          teamMateTrumpSuit = await this.decideTrumpSuit(teamMate, false);
+        }
+        candidates.push([teamMateTrumpSuit, 0]);
+      } else {
+        candidates = SuitHelper.getSuits().map((suit) => [suit, hand.filter((card) => card.suit === suit).reduce((power, card) => power + CardHelper.computeCardPower(card, true), 0)]);
+      }
+    }
+
+    // take the highest power within candidates
+    candidates.sort((a, b) => b[1] - a[1]);
+    const trumpSuit = candidates[0][0];
+
+    console.log(`${player.name} decided trump suit: ${trumpSuit}`);
+    return new Promise<Suit>((resolve) => resolve(trumpSuit));
+  }
+
+
+  getTeamMate(player: Player) {
+    return this.teams.find((team) => team.hasPlayer(player)).getTeamMate(player);
+  }
 }

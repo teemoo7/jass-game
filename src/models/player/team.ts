@@ -18,4 +18,12 @@ export class Team {
   hasPlayer(player: Player) {
     return this.player1 === player || this.player2 === player;
   }
+
+  getTeamMate(player: Player): Player {
+    if (this.player1 === player) {
+      return this.player2;
+    } else if (this.player2 === player) {
+      return this.player1;
+    }
+  }
 }

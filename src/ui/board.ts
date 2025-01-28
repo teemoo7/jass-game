@@ -1,10 +1,119 @@
 import { Game } from "../models/game/game.ts";
 import { Card } from "../models/card/card.ts";
-import { SuitHelper } from "../models/card/suit.ts";
+import { Suit, SuitHelper } from "../models/card/suit.ts";
 import { Rank, RankHelper } from "../models/card/rank.ts";
 import { Player } from "../models/player/player.ts";
 import { Round } from "../models/game/round.ts";
 import { Trick } from "../models/game/trick.ts";
+import { Meld } from "../models/game/meld.ts";
+import { Position, PositionHelper } from "./position.ts";
+
+export function waitForHumanPlayer(hand: Card[]): Promise<Card> {
+  return new Promise(resolve => {
+    const cardDivs = document.querySelectorAll(".card-allowed");
+    cardDivs.forEach(cardDiv => {
+      cardDiv.classList.add("card-playable");
+      cardDiv.addEventListener("click", function onClick() {
+        const cardString = cardDiv.getAttribute("data-card");
+        cardDiv.removeEventListener("click", onClick);
+        const suit = SuitHelper.getSuitFromAbbreviation(cardString!.charAt(0));
+        const rank = RankHelper.getRankFromAbbreviation(cardString!.slice(1));
+        const card = hand.find(c => c.suit === suit && c.rank === rank);
+        resolve(card!);
+      });
+    });
+  });
+}
+
+export function botPlayCard(player: Player, round: Round): Promise<Card> {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const card = round.getCardToPlay(player, round.currentTrick!, round.trumpSuit);
+      resolve(card);
+    }, 1000);
+  });
+}
+
+export function delay() {
+  return new Promise(resolve => setTimeout(resolve, 1000));
+}
+
+
+export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: boolean): Promise<Suit> {
+  return new Promise(resolve => {
+    const trumpDecisionDiv = document.createElement("div");
+    trumpDecisionDiv.id = "trumpDecision";
+
+    const modal = document.createElement("div");
+    modal.id = "modal";
+    const app = document.getElementById("app");
+    app.appendChild(modal);
+
+    const dialog = document.createElement("div");
+    dialog.id = "dialog";
+    app.appendChild(dialog);
+
+    dialog.appendChild(trumpDecisionDiv);
+
+    const trumpDecisionTitle = document.createElement("div");
+    trumpDecisionTitle.classList.add("title");
+    trumpDecisionTitle.textContent = "Select trump suit";
+    trumpDecisionDiv.appendChild(trumpDecisionTitle);
+
+    const trumpDecisionInfo = document.createElement("div");
+    trumpDecisionInfo.classList.add("lead", "trump-decision-info");
+    trumpDecisionInfo.textContent = "Click on a suit below:";
+    trumpDecisionDiv.appendChild(trumpDecisionInfo);
+
+    const trumpDecisionSuits = document.createElement("div");
+    trumpDecisionSuits.classList.add("trump-decision-suits");
+    trumpDecisionDiv.appendChild(trumpDecisionSuits);
+    SuitHelper.getSuits().forEach(suit => {
+      const suitDiv = document.createElement("div");
+      suitDiv.classList.add("trump-decision-suit");
+      suitDiv.appendChild(makeCardImage(new Card(suit, Rank.ACE), true, false, true));
+      trumpDecisionSuits.appendChild(suitDiv);
+      suitDiv.addEventListener("click", () => {
+        trumpDecisionDiv.remove();
+        modal.remove();
+        dialog.remove();
+        resolve(suit);
+      });
+    });
+
+    if (canPass) {
+      const passActionDiv = document.createElement("div");
+      passActionDiv.classList.add("trump-decision-pass");
+      trumpDecisionDiv.appendChild(passActionDiv);
+
+      const passButton = document.createElement("button");
+      passButton.classList.add("pass-button");
+      passButton.textContent = "Pass to team mate";
+      passActionDiv.appendChild(passButton);
+      passButton.addEventListener("click", () => {
+        trumpDecisionDiv.remove();
+        modal.remove();
+        dialog.remove();
+        resolve(round.decideTrumpSuit(round.getTeamMate(player), false));
+      });
+    }
+
+    const trumpDecisionHandTitle = document.createElement("div");
+    trumpDecisionHandTitle.classList.add("lead", "trump-decision-info");
+    trumpDecisionHandTitle.textContent = "Your hand:";
+    trumpDecisionDiv.appendChild(trumpDecisionHandTitle);
+
+    const trumpDecisionHand = document.createElement("div");
+    trumpDecisionHand.classList.add("trump-decision-hand");
+    trumpDecisionDiv.appendChild(trumpDecisionHand);
+
+    for (const card of round.playerHands.get(player)!) {
+      trumpDecisionHand.appendChild(makeCardImage(card, true, false, true));
+    }
+
+  });
+}
+
 
 export function drawBoard(game: Game) {
   const app = document.getElementById("app");
@@ -16,10 +125,12 @@ export function drawBoard(game: Game) {
   const round: Round | undefined = game.rounds[game.rounds.length - 1];
   const trick : Trick | undefined = round ? round.currentTrick : undefined;
 
-  const playerBottom = game.teams[0].player1;
-  const playerRight = game.teams[1].player1;
-  const playerTop = game.teams[0].player2;
-  const playerLeft = game.teams[1].player2;
+  const players: Map<Position, Player> = new Map([
+    [Position.BOTTOM,  game.teams[0].player1],
+    [Position.RIGHT, game.teams[1].player1],
+    [Position.TOP, game.teams[0].player2],
+    [Position.LEFT, game.teams[1].player2]
+  ]);
 
   const container = document.createElement("div");
   container.id = "container";
@@ -29,66 +140,31 @@ export function drawBoard(game: Game) {
   baize.id = "baize";
   container.appendChild(baize);
 
-  /* Areas */
+  /* Players areas */
+  const playerAreas: Map<Position, HTMLDivElement> = new Map();
+  PositionHelper.getPositions().forEach(position => {
+    const playerArea = document.createElement("div");
+    playerArea.classList.add("area", position + "-area");
+    baize.appendChild(playerArea);
+    playerAreas.set(position, playerArea);
+  });
 
-  const playerBottomArea = document.createElement("div");
-  playerBottomArea.classList.add("area", "bottom-area");
-  // playerBottomArea.textContent = playerBottom.name;
-  baize.appendChild(playerBottomArea);
-
-  const playerRightArea = document.createElement("div");
-  playerRightArea.classList.add("area", "right-area");
-  // playerRightHand.textContent = playerRight.name;
-  baize.appendChild(playerRightArea);
-
-  const playerTopArea = document.createElement("div");
-  playerTopArea.classList.add("area", "top-area");
-  // playerTopHand.textContent = playerTop.name;
-  baize.appendChild(playerTopArea);
-
-  const playerLeftArea = document.createElement("div");
-  playerLeftArea.classList.add("area", "left-area");
-  // playerLeftHand.textContent = playerLeft.name;
-  baize.appendChild(playerLeftArea);
-
-  const playerBottomName = document.createElement("div");
-  playerBottomName.classList.add("player-name", "bottom-player-name");
-  playerBottomName.textContent = playerBottom.name;
-  baize.appendChild(playerBottomName);
-
-  const playerRightName = document.createElement("div");
-  playerRightName.classList.add("player-name", "right-player-name");
-  playerRightName.textContent = playerRight.name;
-  baize.appendChild(playerRightName);
-
-  const playerTopName = document.createElement("div");
-  playerTopName.classList.add("player-name", "top-player-name");
-  playerTopName.textContent = playerTop.name;
-  baize.appendChild(playerTopName);
-
-  const playerLeftName = document.createElement("div");
-  playerLeftName.classList.add("player-name", "left-player-name");
-  playerLeftName.textContent = playerLeft.name;
-  baize.appendChild(playerLeftName);
-
+  /* Players names */
+  PositionHelper.getPositions().forEach(position => {
+    const playerName = document.createElement("div");
+    playerName.classList.add("player-name", position + "-player-name");
+    playerName.textContent = players.get(position).name;
+    baize.appendChild(playerName);
+  });
 
   /* Trick cards */
-
-  const trickCardBottom = document.createElement("div");
-  trickCardBottom.classList.add("trick-card", "bottom-trick-card");
-  baize.appendChild(trickCardBottom);
-
-  const trickCardRight = document.createElement("div");
-  trickCardRight.classList.add("trick-card", "right-trick-card");
-  baize.appendChild(trickCardRight);
-
-  const trickCardTop = document.createElement("div");
-  trickCardTop.classList.add("trick-card", "top-trick-card");
-  baize.appendChild(trickCardTop);
-
-  const trickCardLeft = document.createElement("div");
-  trickCardLeft.classList.add("trick-card", "left-trick-card");
-  baize.appendChild(trickCardLeft);
+  const trickCardDivs: Map<Position, HTMLDivElement> = new Map();
+  PositionHelper.getPositions().forEach(position => {
+    const trickCard = document.createElement("div");
+    trickCard.classList.add("trick-card", position + "-trick-card");
+    baize.appendChild(trickCard);
+    trickCardDivs.set(position, trickCard);
+  });
 
   /* Scoreboard */
 
@@ -186,25 +262,42 @@ export function drawBoard(game: Game) {
     meldsTitle.textContent = "Melds";
     meldsDiv.appendChild(meldsTitle);
 
-    for (const [player, meld] of round.provisionalMelds) {
-      const meldDiv = document.createElement("div");
-      meldDiv.classList.add("meld");
-      meldsDiv.appendChild(meldDiv);
+    if (round.provisionalMelds.size > 0) {
+      const meldsTitle = document.createElement("div");
+      meldsTitle.classList.add("lead");
+      meldsTitle.textContent = "Provisional";
+      meldsDiv.appendChild(meldsTitle);
 
-      const meldPlayerDiv = document.createElement("div");
-      meldPlayerDiv.classList.add("meld-player");
-      meldPlayerDiv.textContent = `${player.name}`;
-      meldDiv.appendChild(meldPlayerDiv);
+      for (const [player, meld] of round.provisionalMelds) {
+        meldsDiv.appendChild(makeMeldDiv(player, meld, false));
+      }
+    }
 
-      const meldTypeDiv = document.createElement("div");
-      meldTypeDiv.classList.add("meld-type");
-      meldTypeDiv.textContent = `${meld.type}`;
-      meldDiv.appendChild(meldTypeDiv);
+    if (round.definitiveMelds.size > 0) {
+      const meldsTitle = document.createElement("div");
+      meldsTitle.classList.add("lead");
+      meldsTitle.textContent = "Definitive";
+      meldsDiv.appendChild(meldsTitle);
 
-      const meldPointsDiv = document.createElement("div");
-      meldPointsDiv.classList.add("meld-points");
-      meldPointsDiv.textContent = `${meld.points}`;
-      meldDiv.appendChild(meldPointsDiv);
+      for (const [player, meld] of round.definitiveMelds) {
+        meldsDiv.appendChild(makeMeldDiv(player, meld, true));
+      }
+    }
+
+    const playedTrumpCards: Card[] = round.getPlayedTrumpCards();
+    if (playedTrumpCards.length > 0) {
+      const playedTrumpCardsDiv = document.createElement("div");
+      playedTrumpCardsDiv.id = "playedTrumpCards";
+      roundDiv.appendChild(playedTrumpCardsDiv);
+
+      const playedTrumpCardsTitle = document.createElement("div");
+      playedTrumpCardsTitle.classList.add("subtitle");
+      playedTrumpCardsTitle.textContent = "Played trump cards";
+      playedTrumpCardsDiv.appendChild(playedTrumpCardsTitle);
+
+      for (const card of playedTrumpCards) {
+        playedTrumpCardsDiv.appendChild(makeIllustrationCardImage(card));
+      }
     }
 
     /* Trick scoreboard */
@@ -244,73 +337,82 @@ export function drawBoard(game: Game) {
       }
     }
 
-
-
     /* Hands */
-
-    const playerBottomHand = document.createElement("div");
-    playerBottomHand.classList.add("player-hand");
-    playerBottomArea.appendChild(playerBottomHand);
-    const playerBottomCards: Card[] = round.playerHands.get(playerBottom);
-    let allowedCards = [];
-    if (round.currentTrick) {
-      allowedCards = round.getAllowedCards(playerBottom, round.currentTrick!, round.trumpSuit);
-    }
-    for (const card of playerBottomCards!) {
-      playerBottomHand.appendChild(makeCardImage(card, playerBottom.isHuman, false, allowedCards.includes(card)));
-    }
-
-    const playerRightHand = document.createElement("div");
-    playerRightHand.classList.add("player-hand");
-    playerRightArea.appendChild(playerRightHand);
-    const playerRightCards: Card[] = round.playerHands.get(playerRight);
-    for (const card of playerRightCards!) {
-      playerRightHand.appendChild(makeCardImage(card, playerRight.isHuman, true, playerRight.isHuman));
-    }
-
-    const playerTopHand = document.createElement("div");
-    playerTopHand.classList.add("player-hand");
-    playerTopArea.appendChild(playerTopHand);
-    const playerTopCards: Card[] = round.playerHands.get(playerTop);
-    for (const card of playerTopCards!) {
-      playerTopHand.appendChild(makeCardImage(card, playerTop.isHuman, false, playerTop.isHuman));
-    }
-
-    const playerLeftHand = document.createElement("div");
-    playerLeftHand.classList.add("player-hand");
-    playerLeftArea.appendChild(playerLeftHand);
-    const playerLeftCards: Card[] = round.playerHands.get(playerLeft);
-    for (const card of playerLeftCards!) {
-      playerLeftHand.appendChild(makeCardImage(card, playerLeft.isHuman, true, playerLeft.isHuman));
-    }
+    drawPlayerHandsDiv(round, playerAreas, players);
 
     /* Trick */
-
     if (trick) {
-
-      const playedCardBottom = trick.getPlayedCardByPlayer(playerBottom);
-      if (playedCardBottom) {
-        trickCardBottom.appendChild(makePlayedCardImage(playedCardBottom.card));
-      }
-
-      const playedCardRight = trick.getPlayedCardByPlayer(playerRight);
-      if (playedCardRight) {
-        trickCardRight.appendChild(makePlayedCardImage(playedCardRight.card));
-      }
-
-      const playedCardTop = trick.getPlayedCardByPlayer(playerTop);
-      if (playedCardTop) {
-        trickCardTop.appendChild(makePlayedCardImage(playedCardTop.card));
-      }
-
-      const playedCardLeft = trick.getPlayedCardByPlayer(playerLeft);
-      if (playedCardLeft) {
-        trickCardLeft.appendChild(makePlayedCardImage(playedCardLeft.card));
-      }
-
+      drawPlayedTrickDiv(trick, players, trickCardDivs);
     }
   }
 
+}
+
+function drawPlayedTrickDiv(trick: Trick, players: Map<Position, Player>, trickCardDivs: Map<Position, HTMLDivElement>) {
+  PositionHelper.getPositions().forEach(position => {
+    const player = players.get(position)!;
+    const playedCard = trick.getPlayedCardByPlayer(player);
+    const trickCardDiv = trickCardDivs.get(position)!;
+    if (playedCard) {
+      trickCardDiv.appendChild(makePlayedCardImage(playedCard.card));
+    }
+  });
+}
+
+function drawPlayerHandsDiv(round: Round, playerAreas: Map<Position, HTMLDivElement>, players: Map<Position, Player>) {
+  PositionHelper.getPositions().forEach(position => {
+    const playerArea = playerAreas.get(position)!;
+    const player = players.get(position)!;
+
+    const playerHand = document.createElement("div");
+    playerHand.classList.add("player-hand");
+    playerArea.appendChild(playerHand);
+    const playerCards: Card[] = round.playerHands.get(player);
+    const rotated: boolean = position === Position.RIGHT || position === Position.LEFT;
+    if (position === Position.BOTTOM) {
+      let allowedCards = [];
+      if (round.currentTrick) {
+        allowedCards = round.getAllowedCards(player, round.currentTrick!, round.trumpSuit);
+      }
+      for (const card of playerCards!) {
+        playerHand.appendChild(makeCardImage(card, player.isHuman, rotated, allowedCards.includes(card)));
+      }
+    } else {
+      for (const card of playerCards!) {
+        playerHand.appendChild(makeCardImage(card, player.isHuman, rotated, player.isHuman));
+      }
+    }
+  });
+
+}
+
+function makeMeldDiv(player: Player, meld: Meld, definitive: boolean): HTMLDivElement {
+  const meldDiv = document.createElement("div");
+  meldDiv.classList.add("meld");
+
+  const meldPlayerDiv = document.createElement("div");
+  meldPlayerDiv.classList.add("meld-player");
+  meldPlayerDiv.textContent = `${player.name}`;
+  meldDiv.appendChild(meldPlayerDiv);
+
+  const meldTypeDiv = document.createElement("div");
+  meldTypeDiv.classList.add("meld-type");
+  meldTypeDiv.textContent = `${Meld.getMeldTypeString(meld.type)}`;
+  meldDiv.appendChild(meldTypeDiv);
+
+  const meldPointsDiv = document.createElement("div");
+  meldPointsDiv.classList.add("meld-points");
+  meldPointsDiv.textContent = `(${meld.points})`;
+  meldDiv.appendChild(meldPointsDiv);
+
+  if (definitive && meld.highestRank && meld.suit) {
+    const meldHighestCardDiv = document.createElement("div");
+    meldHighestCardDiv.classList.add("meld-highest-card");
+    meldHighestCardDiv.appendChild(makeIllustrationCardImage(new Card(meld.suit, meld.highestRank)));
+    meldDiv.appendChild(meldHighestCardDiv);
+  }
+
+  return meldDiv;
 }
 
 function makeCardImage(card: Card, visible: boolean, rotated: boolean, allowed: boolean): HTMLDivElement {
@@ -349,6 +451,19 @@ function makeCardImage(card: Card, visible: boolean, rotated: boolean, allowed: 
   return cardDiv;
 }
 
+function makeIllustrationCardImage(card: Card): HTMLDivElement {
+  const cardDiv = document.createElement("div");
+  cardDiv.classList.add("card", "card-small");
+  cardDiv.setAttribute("alt", `${card.rank} of ${card.suit}`);
+
+  let cardImage = document.createElement("img");
+  cardImage.classList.add("card-image-small");
+  cardImage.src = `/images/${card.rank}${SuitHelper.getSuitAbbreviation(card.suit)}.png`;
+  cardDiv.appendChild(cardImage);
+
+  return cardDiv;
+}
+
 function makePlayedCardImage(card: Card): HTMLDivElement {
   const cardDiv = document.createElement("div");
   cardDiv.classList.add("card", "card-normal");
@@ -360,34 +475,4 @@ function makePlayedCardImage(card: Card): HTMLDivElement {
   cardDiv.appendChild(cardImage);
 
   return cardDiv;
-}
-
-export function waitForHumanPlayer(hand: Card[]): Promise<Card> {
-  return new Promise(resolve => {
-    const cardDivs = document.querySelectorAll(".card-allowed");
-    cardDivs.forEach(cardDiv => {
-      cardDiv.classList.add("card-playable");
-      cardDiv.addEventListener("click", function onClick() {
-        const cardString = cardDiv.getAttribute("data-card");
-        cardDiv.removeEventListener("click", onClick);
-        const suit = SuitHelper.getSuitFromAbbreviation(cardString!.charAt(0));
-        const rank = RankHelper.getRankFromAbbreviation(cardString!.slice(1));
-        const card = hand.find(c => c.suit === suit && c.rank === rank);
-        resolve(card!);
-      });
-    });
-  });
-}
-
-export function botPlayCard(player: Player, round: Round): Promise<Card> {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      const card = round.getCardToPlay(player, round.currentTrick!, round.trumpSuit);
-      resolve(card);
-    }, 1000);
-  });
-}
-
-export function delay() {
-  return new Promise(resolve => setTimeout(resolve, 1000));
 }

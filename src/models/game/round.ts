@@ -161,20 +161,61 @@ export class Round {
 
   getCardToPlay(currentPlayer: Player, currentTrick: Trick, trumpSuit: Suit): Card {
     const allowedCards = this.getAllowedCards(currentPlayer, currentTrick, trumpSuit);
+    const nonTrumpCards = allowedCards.filter((card) => card.suit !== trumpSuit);
+    const trumpCards = allowedCards.filter((card) => card.suit === trumpSuit);
+
+    const teamMate = this.getTeamMate(currentPlayer);
+    const isLastToPlay: boolean = currentTrick.playedCards.length === 3;
+    const isFirstToPlay: boolean = currentTrick.playedCards.length === 0;
+    const currentTrickWinner: Player | undefined = currentTrick.computeWinningPlayedCard()?.player;
+    const suitToFollow: Suit | undefined = currentTrick.playedCards[0]?.card.suit;
+    const trickScore: number = currentTrick.computeTrickScore();
+
+    if (isLastToPlay && currentTrickWinner === teamMate) {
+      // If you are the last to play and your partner is winning the trick, play the card with the highest value, but preferably a ten rather than an ace
+      if (nonTrumpCards.length > 0) {
+        if (nonTrumpCards.some((card) => card.rank === Rank.TEN)) {
+          return nonTrumpCards.find((card) => card.rank === Rank.TEN);
+        }
+      }
+      if (suitToFollow === trumpSuit) {
+        if (allowedCards.some((card) => card.rank === Rank.TEN)) {
+          return allowedCards.find((card) => card.rank === Rank.TEN);
+        }
+      }
+    }
+
+    if (isLastToPlay && currentTrickWinner !== teamMate) {
+      // If you are the last to play and your partner is losing the trick, and you have a better card to win the trick, play it, otherwise play the card with the lowest value
+      const winningCard = currentTrick.computeWinningPlayedCard()?.card;
+
+      const betterNonTrumpCard = nonTrumpCards.find((card) => CardHelper.computeCardPower(card, card.suit === trumpSuit) > CardHelper.computeCardPower(winningCard!, winningCard!.suit === trumpSuit));
+      if (betterNonTrumpCard) {
+        return betterNonTrumpCard;
+      }
+      return nonTrumpCards.reduce((lowest, card) => {
+        return CardHelper.computeCardValue(card, card.suit === trumpSuit) < CardHelper.computeCardValue(lowest, lowest.suit === trumpSuit) ? card : lowest;
+      });
+    }
+
+    if (!isFirstToPlay && currentTrickWinner !== teamMate) {
+      // If there is a high value in the current trick, and you are not sure that your partner will win it, and you have a trump card, play it
+      if (trickScore >= 10 && trumpCards.length > 0) {
+        return trumpCards.reduce((lowest, card) => {
+          return CardHelper.computeCardValue(card, card.suit === trumpSuit) < CardHelper.computeCardValue(lowest, lowest.suit === trumpSuit) ? card : lowest;
+        });
+      }
+    }
+
 
     /* Ideas:
-    - If you are the last to play and your partner is winning the meld, play the card with the highest value, but preferably a ten rather than an ace
-    - If you are the last to play and your partner is losing the meld, play the card with the lowest value, and the lowest rank
-    - If you are the last to play and you have a better card than the one that is winning, play it
     - If you are the first to play and you have a card that is winning over all remaining cards in all hands, play it, unless it's in trump suit
     - If you are the first to play and you have chosen the trump suit, play the most powerful card in that suit, unless you know that the other team has no more trump cards
     - If you are the first to play and you know that your teammate has cards with high power in a suit, play a card in that suit
-    - If there is a high value in the current meld, and you are not sure that your partner will win it, and you have a trump card, play it
-    - If you don't know, play a random card
      */
 
 
-    // select a random card for now
+    // If you don't know, play a random card
     return Utils.getRandomElement(allowedCards);
   }
 
@@ -189,10 +230,31 @@ export class Round {
       .map((playedCard) => playedCard.card);
   }
   async decideTrumpSuit(player: Player, canPass: boolean): Promise<Suit> {
+    let trumpSuit: Suit;
+
     const hand: Card[] = this.playerHands.get(player);
     console.log(`${player.name} is deciding trump suit with hand: ${hand.map((card) => `${card.rank} of ${card.suit}`).join(", ")}`);
 
-    // compute valid candidates
+    const recommendedTrumpSuit = this.computeBestTrumpSuit(hand, canPass);
+    if (recommendedTrumpSuit) {
+      trumpSuit = recommendedTrumpSuit;
+    } else {
+      this.trumpDecisionPassed = true;
+      const teamMate = this.getTeamMate(player);
+      console.log(`${player.name} passed to ${teamMate.name}`);
+      let teamMateTrumpSuit: Suit;
+      if (teamMate.isHuman) {
+        trumpSuit = await drawTrumpDecisionDiv(this, teamMate, false);
+      } else {
+        trumpSuit = await this.decideTrumpSuit(teamMate, false);
+      }
+    }
+
+    console.log(`${player.name} decided trump suit: ${trumpSuit}`);
+    return new Promise<Suit>((resolve) => resolve(trumpSuit));
+  }
+
+  computeBestTrumpSuit(hand: Card[], canPass: boolean): Suit | undefined {
     let candidates: [Suit, number][] = [];
 
     for (const suit of SuitHelper.getSuits()) {
@@ -210,16 +272,7 @@ export class Round {
 
     if (candidates.length == 0) {
       if (canPass) {
-        this.trumpDecisionPassed = true;
-        const teamMate = this.getTeamMate(player);
-        console.log(`${player.name} passed to ${teamMate.name}`);
-        let teamMateTrumpSuit: Suit;
-        if (teamMate.isHuman) {
-          teamMateTrumpSuit = await drawTrumpDecisionDiv(this, teamMate, false);
-        } else {
-          teamMateTrumpSuit = await this.decideTrumpSuit(teamMate, false);
-        }
-        candidates.push([teamMateTrumpSuit, 0]);
+        return undefined;
       } else {
         candidates = SuitHelper.getSuits().map((suit) => [suit, hand.filter((card) => card.suit === suit).reduce((power, card) => power + CardHelper.computeCardPower(card, true), 0)]);
       }
@@ -227,10 +280,7 @@ export class Round {
 
     // take the highest power within candidates
     candidates.sort((a, b) => b[1] - a[1]);
-    const trumpSuit = candidates[0][0];
-
-    console.log(`${player.name} decided trump suit: ${trumpSuit}`);
-    return new Promise<Suit>((resolve) => resolve(trumpSuit));
+    return candidates[0][0];
   }
 
 

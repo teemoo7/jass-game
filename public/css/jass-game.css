@@ -24,7 +24,7 @@ html, body {
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: #1a1a1a;
-    opacity: 0.9;
+    opacity: 1.0    ;
     color: white;
     padding: 20px;
     border: 1px solid darkgray;
@@ -405,14 +405,35 @@ div.card-cover {
 
 .trump-decision-suit {
     cursor: pointer;
+    padding: 5px;
+}
+
+.trump-decision-suit-recommended {
+    box-shadow: #095f67 0 0 10px;
+    background-color: #095f67;
+    border-radius: 5px;
 }
 
 .trump-decision-pass {
     text-align: center;
 }
 
-button.pass-button {
+.pass-button {
     cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid lightgray;
+    background-color: lightgray;
+    color: #1a1a1a;
+    width: 150px;
+    margin: auto;
+}
+
+.pass-button-recommended {
+    border: 1px solid #095f67;
+    box-shadow: #095f67 0 0 10px;
+    background-color: #095f67;
+    color: lightgray;
 }
 
 .trump-decision-hand {

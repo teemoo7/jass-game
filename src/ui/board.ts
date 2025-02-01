@@ -41,6 +41,8 @@ export function delay() {
 
 export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: boolean): Promise<Suit> {
   return new Promise(resolve => {
+    const hand: Card[] = round.playerHands.get(player)!;
+
     const trumpDecisionDiv = document.createElement("div");
     trumpDecisionDiv.id = "trumpDecision";
 
@@ -65,12 +67,17 @@ export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: bool
     trumpDecisionInfo.textContent = "Click on a suit below:";
     trumpDecisionDiv.appendChild(trumpDecisionInfo);
 
+    const trumpSuitRecommendation = round.computeBestTrumpSuit(hand, canPass);
+
     const trumpDecisionSuits = document.createElement("div");
     trumpDecisionSuits.classList.add("trump-decision-suits");
     trumpDecisionDiv.appendChild(trumpDecisionSuits);
     SuitHelper.getSuits().forEach(suit => {
       const suitDiv = document.createElement("div");
       suitDiv.classList.add("trump-decision-suit");
+      if (trumpSuitRecommendation && trumpSuitRecommendation === suit) {
+        suitDiv.classList.add("trump-decision-suit-recommended");
+      }
       suitDiv.appendChild(makeCardImage(new Card(suit, Rank.ACE), true, false, true));
       trumpDecisionSuits.appendChild(suitDiv);
       suitDiv.addEventListener("click", () => {
@@ -86,14 +93,18 @@ export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: bool
       passActionDiv.classList.add("trump-decision-pass");
       trumpDecisionDiv.appendChild(passActionDiv);
 
-      const passButton = document.createElement("button");
+      const passButton = document.createElement("div");
       passButton.classList.add("pass-button");
+      if (trumpSuitRecommendation === undefined) {
+        passButton.classList.add("pass-button-recommended");
+      }
       passButton.textContent = "Pass to team mate";
       passActionDiv.appendChild(passButton);
       passButton.addEventListener("click", () => {
         trumpDecisionDiv.remove();
         modal.remove();
         dialog.remove();
+        console.log(`${player.name} passed the trump decision to ${round.getTeamMate(player).name}`);
         resolve(round.decideTrumpSuit(round.getTeamMate(player), false));
       });
     }
@@ -107,7 +118,7 @@ export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: bool
     trumpDecisionHand.classList.add("trump-decision-hand");
     trumpDecisionDiv.appendChild(trumpDecisionHand);
 
-    for (const card of round.playerHands.get(player)!) {
+    for (const card of hand) {
       trumpDecisionHand.appendChild(makeCardImage(card, true, false, true));
     }
 

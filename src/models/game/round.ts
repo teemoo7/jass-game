@@ -174,13 +174,17 @@ export class Round {
     if (isLastToPlay && currentTrickWinner === teamMate) {
       // If you are the last to play and your partner is winning the trick, play the card with the highest value, but preferably a ten rather than an ace
       if (nonTrumpCards.length > 0) {
-        if (nonTrumpCards.some((card) => card.rank === Rank.TEN)) {
-          return nonTrumpCards.find((card) => card.rank === Rank.TEN);
+        const tenCard = nonTrumpCards.find((card) => card.rank === Rank.TEN);
+        if (tenCard) {
+          console.log("AI: If you are the last to play and your partner is winning the trick, play a non-trump ten");
+          return tenCard;
         }
       }
       if (suitToFollow === trumpSuit) {
-        if (allowedCards.some((card) => card.rank === Rank.TEN)) {
-          return allowedCards.find((card) => card.rank === Rank.TEN);
+        const tenCard = allowedCards.find((card) => card.rank === Rank.TEN);
+        if (tenCard) {
+          console.log("AI: If you are the last to play and your partner is winning the trick, play a trump ten");
+          return tenCard;
         }
       }
     }
@@ -191,32 +195,77 @@ export class Round {
 
       const betterNonTrumpCard = nonTrumpCards.find((card) => CardHelper.computeCardPower(card, card.suit === trumpSuit) > CardHelper.computeCardPower(winningCard!, winningCard!.suit === trumpSuit));
       if (betterNonTrumpCard) {
+        console.log("AI: If you are the last to play and your partner is losing the trick, and you have a better non-trump card to win the trick, play it");
         return betterNonTrumpCard;
       }
-      return nonTrumpCards.reduce((lowest, card) => {
-        return CardHelper.computeCardValue(card, card.suit === trumpSuit) < CardHelper.computeCardValue(lowest, lowest.suit === trumpSuit) ? card : lowest;
-      });
+      if (nonTrumpCards.length > 0) {
+        console.log("AI: If you are the last to play and your partner is losing the trick, play the non-trump card with the lowest value");
+        return nonTrumpCards.reduce((lowest, card) => {
+          return CardHelper.computeCardValue(card, card.suit === trumpSuit) < CardHelper.computeCardValue(lowest, lowest.suit === trumpSuit) ? card : lowest;
+        });
+      }
     }
 
     if (!isFirstToPlay && currentTrickWinner !== teamMate) {
       // If there is a high value in the current trick, and you are not sure that your partner will win it, and you have a trump card, play it
       if (trickScore >= 10 && trumpCards.length > 0) {
+        console.log("AI: If there is a high value in the current trick, and you are not sure that your partner will win it, and you have a trump card, play it");
         return trumpCards.reduce((lowest, card) => {
           return CardHelper.computeCardValue(card, card.suit === trumpSuit) < CardHelper.computeCardValue(lowest, lowest.suit === trumpSuit) ? card : lowest;
         });
       }
     }
 
+    if (isFirstToPlay && nonTrumpCards.length > 0) {
+      // If you are the first to play, and you have a card that is winning over all remaining cards in all hands, play it, unless it's in trump suit
+      SuitHelper.getSuits().filter((suit) => suit !== this.trumpSuit).forEach((suit) => {
+        const suitCards = nonTrumpCards.filter((card) => card.suit === suit);
+        if (suitCards.length > 0) {
+          const maxPowerCardInSuit = suitCards.reduce((max, card) => {
+            return CardHelper.computeCardPower(card, false) > CardHelper.computeCardPower(max, false) ? card : max;
+          });
+          // If the opponent team players don't have a card of the suit, play it
+          if (this.getOpponents(currentPlayer).every((opponent) => !this.playerMightStillHaveSuit(opponent, suit))) {
+            console.log("AI: If you are the first to play, and you have a card that is winning over all remaining cards in all hands, play it, unless it's in trump suit");
+            return maxPowerCardInSuit;
+          }
+        }
+      });
+    }
+
+    // If you are the first to play, and you have chosen the trump suit, play the most powerful card in that suit, unless you know that the other team has no more trump cards
+    if (isFirstToPlay && this.trumpDecider === currentPlayer && trumpCards.length > 0) {
+      const maxPowerInTrump = trumpCards.reduce((max, card) => {
+        return CardHelper.computeCardPower(card, true) > CardHelper.computeCardPower(max, true) ? card : max;
+      });
+      if (this.getOpponents(currentPlayer).some((opponent) => this.playerMightStillHaveSuit(opponent, trumpSuit))) {
+        console.log("AI: If you are the first to play, and you have chosen the trump suit, play the most powerful card in that suit, unless you know that the other team has no more trump cards");
+        return maxPowerInTrump;
+      }
+    }
+
 
     /* Ideas:
-    - If you are the first to play and you have a card that is winning over all remaining cards in all hands, play it, unless it's in trump suit
-    - If you are the first to play and you have chosen the trump suit, play the most powerful card in that suit, unless you know that the other team has no more trump cards
-    - If you are the first to play and you know that your teammate has cards with high power in a suit, play a card in that suit
+    - If you are the first to play, and you know that your teammate has cards with high power in a suit, play a card in that suit
      */
 
 
     // If you don't know, play a random card
+    console.log("AI: Playing a random card");
     return Utils.getRandomElement(allowedCards);
+  }
+
+  playerMightStillHaveSuit(player: Player, suit: Suit): boolean {
+    // Try to determine if the player has not played a card of the suit in the played tricks when they should have if they had some
+    this.playedTricks.forEach((trick) => {
+      const firstPlayedCard = trick.playedCards[0];
+      if (firstPlayedCard!.card.suit === suit && firstPlayedCard!.player !== player) {
+        if (trick.playedCards.some((playedCard) => playedCard.player === player && playedCard.card.suit !== suit && (playedCard.card.suit !== this.trumpSuit || suit === this.trumpSuit))) {
+          return false;
+        }
+      }
+    });
+    return true;
   }
 
   addScore(team: Team, score: number): void {
@@ -229,6 +278,7 @@ export class Round {
       .filter((playedCard) => playedCard.card.suit === this.trumpSuit)
       .map((playedCard) => playedCard.card);
   }
+
   async decideTrumpSuit(player: Player, canPass: boolean): Promise<Suit> {
     let trumpSuit: Suit;
 
@@ -284,7 +334,11 @@ export class Round {
   }
 
 
-  getTeamMate(player: Player) {
+  getTeamMate(player: Player): Player {
     return this.teams.find((team) => team.hasPlayer(player)).getTeamMate(player);
+  }
+
+  getOpponents(player: Player): Player[] {
+    return this.teams.find((team) => !team.hasPlayer(player)).getPlayers();
   }
 }

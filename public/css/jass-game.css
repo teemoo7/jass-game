@@ -1,0 +1,445 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    background-color: #242424;
+    color: white;
+}
+
+#modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #1a1a1a;
+    opacity: 0.5;
+    z-index: 999;
+}
+
+#dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #1a1a1a;
+    opacity: 1.0    ;
+    color: white;
+    padding: 20px;
+    border: 1px solid darkgray;
+    border-radius: 5px;
+    box-shadow: #1a1a1a 0 0 10px;
+    z-index: 1000;
+    width: 700px;
+}
+
+#container {
+    display: flex;
+}
+
+#baize {
+    background-image: url("/images/dark-green-wall.jpg");
+    width: 900px;
+    height: 900px;
+    line-height: 0;
+    border: 2px solid #1a1a1a;
+    position: relative;
+    margin: 10px;
+    box-shadow: 0 0 20px 10px #1a1a1a;
+}
+
+.area {
+    /*background-color: indianred;*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.bottom-area {
+    position: absolute;
+    left: 100px;
+    top: 750px;
+    width: 700px;
+    height: 150px;
+}
+
+.top-area {
+    position: absolute;
+    left: 100px;
+    top: 0;
+    width: 700px;
+    height: 150px;
+}
+
+.left-area {
+    position: absolute;
+    left: 0;
+    top: 100px;
+    width: 150px;
+    height: 700px;
+}
+
+.right-area {
+    position: absolute;
+    left: 750px;
+    top: 100px;
+    width: 150px;
+    height: 700px;
+}
+
+.player-name {
+    font-size: 1em;
+    color: lightgray;
+}
+
+.bottom-player-name {
+    position: absolute;
+    left: 100px;
+    top: 750px;
+    width: 700px;
+    height: 20px;
+    text-align: center;
+}
+
+.right-player-name {
+    position: absolute;
+    left: 750px;
+    top: 100px;
+    width: 20px;
+    height: 700px;
+    text-align: center;
+    text-orientation: mixed;
+    writing-mode: vertical-lr;
+}
+
+.top-player-name {
+    position: absolute;
+    left: 100px;
+    top: 150px;
+    width: 700px;
+    height: 20px;
+    text-align: center;
+}
+
+.left-player-name {
+    position: absolute;
+    left: 150px;
+    top: 100px;
+    width: 20px;
+    height: 700px;
+    text-align: center;
+    text-orientation: mixed;
+    writing-mode: vertical-lr;
+}
+
+.left-area img.card-image {
+    transform: rotate(90deg);
+}
+
+.right-area img.card-image {
+    transform: rotate(-90deg);
+}
+
+div.trick-card {
+    width: 80px;
+    height: 120px;
+    padding-top: 15px;
+}
+
+div.bottom-trick-card {
+    position: absolute;
+    left: 410px;
+    top: 510px;
+}
+
+div.right-trick-card {
+    position: absolute;
+    left: 490px;
+    top: 390px;
+}
+
+div.top-trick-card {
+    position: absolute;
+    left: 410px;
+    top: 270px;
+}
+
+div.left-trick-card {
+    position: absolute;
+    left: 330px;
+    top: 390px;
+}
+
+#scoreboard {
+    width: 300px;
+    background-color: #1a1a1a;
+    color: white;
+    border: 1px solid darkgray;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 10px;
+}
+
+.title {
+    text-align: center;
+    font-size: 1.5em;
+    margin-bottom: 10px;
+    color: darkgray;
+}
+
+.subtitle {
+    text-align: center;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: darkgray;
+}
+
+.lead {
+    font-weight: bold;
+    color: darkgray;
+}
+
+div.team-score {
+    background-color: #242424;
+    color: white;
+    border: 1px solid #1a1a1a;
+    padding: 20px;
+    display: flex;
+    margin-bottom: 10px;
+    justify-content: center;
+}
+
+div.team-points {
+    width: 30%;
+    text-align: center;
+    font-size: 2em;
+}
+
+div.team-details {
+    width: 70%;
+    padding-left: 10px;
+}
+
+.team {
+    font-size: 1.2em;
+    color: dimgrey;
+}
+
+.player {
+    font-weight: normal;
+    color: darkgray;
+    margin-left: 10px;
+}
+
+.human {
+    font-weight: bold;
+    color: #095f67;
+}
+
+#round {
+    margin-top: 50px;
+}
+
+#trump {
+    padding: 20px;
+    display: flex;
+    margin-bottom: 10px;
+    justify-content: center;
+}
+
+#trump img.trump-suit-image {
+    width: 70px;
+    height: 100px;
+}
+
+#trump div#trumpDetails {
+    margin-left: 20px;
+}
+
+#trump .trump-suit {
+    font-size: 2em;
+    color: #095f67;
+}
+
+.melds {
+}
+
+.meld {
+    display: flex;
+}
+
+.meld-highest-card {
+    width: 50px;
+}
+
+.meld-player {
+    color: dimgray;
+    margin-left: 5px;
+    width: 100px;
+}
+
+.meld-type {
+    color: lightgray;
+    margin-left: 5px;
+    width: 100px;
+}
+
+.meld-points {
+    margin-left: 5px;
+    color: dimgrey;
+    width: 50px;
+}
+
+#trick {
+    margin-top: 25px;
+    color: dimgrey;
+}
+
+#trick .trick-points {
+    font-weight: bold;
+    color: lightgray;
+}
+
+#trick .trick-winning-player-name {
+    font-weight: bold;
+    color: lightgray;
+}
+
+img.trump-suit-image {
+    width: 70px;
+    height: 100px;
+}
+
+.trump-decider {
+    color: dimgrey;
+}
+
+.trump-suit-value {
+    color: darkgray;
+    font-weight: bold;
+}
+
+.trump-decider-player {
+    font-weight: bold;
+    color: darkgray;
+}
+
+div.player-hand {
+    display: flex;
+    flex-wrap: wrap; /* Allow items to wrap to the next line */
+    justify-content: center; /* Horizontally center the items */
+    gap: 0; /* Ensure no extra space between rows or columns */
+}
+
+div.card {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+div.card-normal {
+    margin: 0 1px;
+}
+
+div.card-rotated {
+    margin: 1px 0;
+}
+
+img.card-image-small {
+    width: 30px;
+    height: 45px;
+    box-shadow: #1a1a1a 0 0 10px;
+    border-radius: 2px;
+}
+
+img.card-image {
+    width: 70px;
+    height: 100px;
+    box-shadow: #1a1a1a 0 0 10px;
+    border-radius: 2px;
+}
+
+img.card-image-rotated {
+    width: 100px;
+    height: 70px;
+    box-shadow: #1a1a1a 0 0 10px;
+}
+
+div.card-playable {
+    cursor: pointer;
+    box-shadow: white 0 0 10px;
+}
+
+div.card-cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #242424;
+    opacity: 0.3;
+    height: 100%;
+    width: 100%;
+    border-radius: 2px;
+}
+
+
+#trumpDecision {
+}
+
+.trump-decision-info {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.trump-decision-suits {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.trump-decision-suit {
+    cursor: pointer;
+    padding: 5px;
+}
+
+.trump-decision-suit-recommended {
+    box-shadow: #095f67 0 0 10px;
+    background-color: #095f67;
+    border-radius: 5px;
+}
+
+.trump-decision-pass {
+    text-align: center;
+}
+
+.pass-button {
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid lightgray;
+    background-color: lightgray;
+    color: #1a1a1a;
+    width: 150px;
+    margin: auto;
+}
+
+.pass-button-recommended {
+    border: 1px solid #095f67;
+    box-shadow: #095f67 0 0 10px;
+    background-color: #095f67;
+    color: lightgray;
+}
+
+.trump-decision-hand {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 10px;
+}

@@ -153,7 +153,7 @@ describe("Game Round", () => {
       const startingPlayer = round.computeStartingPlayer();
 
       // then
-      const hand = round.playerHands.get(startingPlayer);
+      const hand = round.playerHands.get(startingPlayer)!;
       expect(hand.some(card => card.suit === Suit.DIAMONDS && card.rank === Rank.SEVEN)).toBe(true);
     });
 
@@ -170,7 +170,7 @@ describe("Game Round", () => {
       const startingPlayer = round.computeStartingPlayer();
 
       // then
-      const hand = round.playerHands.get(startingPlayer);
+      const hand = round.playerHands.get(startingPlayer)!;
       expect(hand.some(card => card.suit === Suit.SPADES && card.rank === Rank.QUEEN)).toBe(true);
     });
   });
@@ -212,7 +212,7 @@ describe("Game Round", () => {
       const allowedCards = round.getAllowedCards(player, round.currentTrick, round.trumpSuit);
 
       // when
-      const expectedCards = round.playerHands.get(player).filter(card => card.suit === firstCard.suit || card.suit === round.trumpSuit);
+      const expectedCards = round.playerHands.get(player)!.filter(card => card.suit === firstCard.suit || card.suit === round.trumpSuit);
 
       // then
       expectedCards.forEach(card => expect(allowedCards).toContain(card));

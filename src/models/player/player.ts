@@ -1,9 +1,9 @@
-export class Player {
+export abstract class Player {
   readonly name: string;
-  readonly isHuman: boolean;
 
-  constructor(name: string, isHuman: boolean) {
+  constructor(name: string) {
     this.name = name;
-    this.isHuman = isHuman;
   }
+
+  abstract isHuman(): boolean;
 }

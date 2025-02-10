@@ -51,7 +51,7 @@ export class Game {
     drawBoard(this);
     const trumpDecider = round.trumpDecider;
     console.log(`Round ${round.number} started with ${trumpDecider.name} deciding the trump suit`);
-    round.trumpSuit = trumpDecider.isHuman ? await drawTrumpDecisionDiv(round, trumpDecider, true) : await round.decideTrumpSuit(trumpDecider, true);
+    round.trumpSuit = trumpDecider.isHuman() ? await drawTrumpDecisionDiv(round, trumpDecider, true) : await round.decideTrumpSuit(trumpDecider, true);
 
     let currentPlayer = trumpDecider;
 
@@ -65,9 +65,9 @@ export class Game {
       drawBoard(this);
 
       for (let playerIndex = 1; playerIndex <= 4; playerIndex++) {
-        const playerHand = round.playerHands.get(currentPlayer);
+        const playerHand: Card[] = round.playerHands.get(currentPlayer)!;
         if (trickIndex == 1) {
-          const meld = this.computePlayerMeld(playerHand);
+          const meld: Meld | undefined = this.computePlayerMeld(playerHand);
           if (meld) {
             round.provisionalMelds.set(currentPlayer, meld);
           }
@@ -77,7 +77,7 @@ export class Game {
             round.provisionalMelds.clear();
           }
         }
-        const card = currentPlayer.isHuman ? await waitForHumanPlayer(playerHand) : await botPlayCard(currentPlayer, round);
+        const card = currentPlayer.isHuman() ? await waitForHumanPlayer(playerHand) : await botPlayCard(currentPlayer, round);
 
         // play it
         playerHand.splice(playerHand.indexOf(card), 1);
@@ -164,12 +164,12 @@ export class Game {
   }
 
   addScore(team: Team, score: number): void {
-    this.scores.set(team, score + this.scores.get(team));
+    this.scores.set(team, score + this.scores.get(team)!);
   }
 
   addRoundScores(round: Round) {
-    this.scores.forEach((score, team) => {
-      this.addScore(team, round.scores.get(team));
+    this.teams.forEach(team => {
+      this.addScore(team, round.scores.get(team)!);
     });
   }
 

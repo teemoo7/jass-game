@@ -12,7 +12,7 @@ export enum Rank {
 
 export class RankHelper {
   static getRanks(): Rank[] {
-    return Object.keys(Rank).map((rank) => Rank[rank]);
+    return Object.keys(Rank).map((rank) => Rank[rank as keyof typeof Rank]);
   }
 
   static getRankFromAbbreviation(abbreviation: string): Rank {
@@ -35,6 +35,8 @@ export class RankHelper {
         return Rank.KING;
       case "A":
         return Rank.ACE;
+      default:
+        throw new Error("Invalid abbreviation");
     }
   }
 }

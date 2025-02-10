@@ -7,6 +7,10 @@ import { Round } from "../models/game/round.ts";
 import { Trick } from "../models/game/trick.ts";
 import { Meld } from "../models/game/meld.ts";
 import { Position, PositionHelper } from "./position.ts";
+import { GameMode } from "../models/game/gamemode.ts";
+import { Team } from "../models/player/team.ts";
+import { Human } from "../models/player/human.ts";
+import { Bot } from "../models/player/bot.ts";
 
 export function waitForHumanPlayer(hand: Card[]): Promise<Card> {
   return new Promise(resolve => {
@@ -28,7 +32,7 @@ export function waitForHumanPlayer(hand: Card[]): Promise<Card> {
 export function botPlayCard(player: Player, round: Round): Promise<Card> {
   return new Promise(resolve => {
     setTimeout(() => {
-      const card = round.getCardToPlay(player, round.currentTrick!, round.trumpSuit);
+      const card = round.getCardToPlay(player, round.currentTrick!, round.trumpSuit!);
       resolve(card);
     }, 1000);
   });
@@ -38,6 +42,150 @@ export function delay() {
   return new Promise(resolve => setTimeout(resolve, 1000));
 }
 
+export function drawNewGameSettings(): Promise<Game> {
+  return new Promise(resolve => {
+    const newGameSettingsDiv = document.createElement("div");
+    newGameSettingsDiv.id = "newGameSettings";
+
+    const modal = document.createElement("div");
+    modal.id = "modal";
+    const app = document.getElementById("app")!;
+    app.appendChild(modal);
+
+    const dialog = document.createElement("div");
+    dialog.id = "dialog";
+    app.appendChild(dialog);
+
+    dialog.appendChild(newGameSettingsDiv);
+
+    const title = document.createElement("div");
+    title.classList.add("title");
+    title.textContent = "New Game";
+    newGameSettingsDiv.appendChild(title);
+
+    const gameModeDiv = document.createElement("div");
+    gameModeDiv.id = "gameMode";
+    newGameSettingsDiv.appendChild(gameModeDiv);
+
+    const gameModeTitle = document.createElement("div");
+    gameModeTitle.classList.add("subtitle");
+    gameModeTitle.textContent = "Game mode";
+    gameModeDiv.appendChild(gameModeTitle);
+
+    const gameModeOptions = document.createElement("div");
+    gameModeOptions.classList.add("game-mode-options");
+    gameModeDiv.appendChild(gameModeOptions);
+
+    const gameModeNormalInput = document.createElement("input");
+    gameModeNormalInput.type = "radio";
+    gameModeNormalInput.name = "gameMode";
+    gameModeNormalInput.value = GameMode.NORMAL;
+    gameModeNormalInput.classList.add("game-mode-option");
+    gameModeNormalInput.checked = true;
+    gameModeOptions.appendChild(gameModeNormalInput);
+
+    const gameModeNormalLabel = document.createElement("label");
+    gameModeNormalLabel.textContent = "Normal (1000 pts)";
+    gameModeOptions.appendChild(gameModeNormalLabel);
+
+    const gameModeDoubledSpadesInput = document.createElement("input");
+    gameModeDoubledSpadesInput.type = "radio";
+    gameModeDoubledSpadesInput.name = "gameMode";
+    gameModeDoubledSpadesInput.value = GameMode.DOUBLED_SPADES;
+    gameModeDoubledSpadesInput.classList.add("game-mode-option");
+    gameModeOptions.appendChild(gameModeDoubledSpadesInput);
+
+    const gameModeDoubledSpadesLabel = document.createElement("label");
+    gameModeDoubledSpadesLabel.textContent = "Doubled spades (1500 pts)";
+    gameModeOptions.appendChild(gameModeDoubledSpadesLabel);
+
+    const playerNameDiv = document.createElement("div");
+    playerNameDiv.id = "playerName";
+    newGameSettingsDiv.appendChild(playerNameDiv);
+
+    const playerNameTitle = document.createElement("div");
+    playerNameTitle.classList.add("subtitle");
+    playerNameTitle.textContent = "Player name";
+    playerNameDiv.appendChild(playerNameTitle);
+
+    const playerNameInput = document.createElement("input");
+    playerNameInput.type = "text";
+    playerNameInput.id = "playerNameInput";
+    playerNameInput.value = "Me";
+    playerNameDiv.appendChild(playerNameInput);
+
+    const teamNameDiv = document.createElement("div");
+    teamNameDiv.id = "teamName";
+    newGameSettingsDiv.appendChild(teamNameDiv);
+
+    const teamNameTitle = document.createElement("div");
+    teamNameTitle.classList.add("subtitle");
+    teamNameTitle.textContent = "Team name";
+    teamNameDiv.appendChild(teamNameTitle);
+
+    const teamNameInput = document.createElement("input");
+    teamNameInput.type = "text";
+    teamNameInput.id = "teamNameInput";
+    teamNameInput.value = "The best team";
+    teamNameDiv.appendChild(teamNameInput);
+
+    const botsLevelDiv = document.createElement("div");
+    botsLevelDiv.id = "botsLevel";
+    newGameSettingsDiv.appendChild(botsLevelDiv);
+
+    const botsLevelTitle = document.createElement("div");
+    botsLevelTitle.classList.add("subtitle");
+    botsLevelTitle.textContent = "Bots level";
+    botsLevelDiv.appendChild(botsLevelTitle);
+
+    const botsLevelSelect = document.createElement("select");
+    botsLevelSelect.id = "botsLevelSelect";
+    botsLevelDiv.appendChild(botsLevelSelect);
+
+    const botsLevelStupidOption = document.createElement("option");
+    botsLevelStupidOption.value = "0";
+    botsLevelStupidOption.textContent = "Stupid";
+    botsLevelSelect.appendChild(botsLevelStupidOption);
+
+    const botsLevelEasyOption = document.createElement("option");
+    botsLevelEasyOption.value = "1";
+    botsLevelEasyOption.textContent = "Easy";
+    botsLevelSelect.appendChild(botsLevelEasyOption);
+
+    const botsLevelMediumOption = document.createElement("option");
+    botsLevelMediumOption.value = "2";
+    botsLevelMediumOption.textContent = "Medium";
+    botsLevelSelect.appendChild(botsLevelMediumOption);
+
+    const botsLevelHardOption = document.createElement("option");
+    botsLevelHardOption.value = "3";
+    botsLevelHardOption.textContent = "Hard";
+    botsLevelHardOption.selected = true;
+    botsLevelSelect.appendChild(botsLevelHardOption);
+
+    const startButton = document.createElement("button");
+    startButton.textContent = "Start game";
+    newGameSettingsDiv.appendChild(startButton);
+    startButton.addEventListener("click", () => {
+      const gameMode = (document.querySelector('input[name="gameMode"]:checked') as HTMLInputElement)!.value as GameMode;
+      const playerName = (document.getElementById("playerNameInput") as HTMLInputElement).value;
+      const playerHuman: Player = new Human(playerName);
+      const botsLevel = parseInt((document.getElementById("botsLevelSelect") as HTMLSelectElement).value);
+      const playerBot1: Player = new Bot("Bot top", botsLevel);
+      const playerBot2: Player = new Bot("Bot right", botsLevel);
+      const playerBot3: Player = new Bot("Bot left", botsLevel);
+      const teamName = (document.getElementById("teamNameInput") as HTMLInputElement).value;
+      const team1: Team = new Team(playerHuman, playerBot1, teamName);
+      const team2: Team = new Team(playerBot2, playerBot3, "Bots invaders");
+      const game = new Game([team1, team2], gameMode);
+      newGameSettingsDiv.remove();
+      modal.remove();
+      dialog.remove();
+      resolve(game);
+    });
+
+  });
+}
 
 export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: boolean): Promise<Suit> {
   return new Promise(resolve => {
@@ -48,7 +196,7 @@ export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: bool
 
     const modal = document.createElement("div");
     modal.id = "modal";
-    const app = document.getElementById("app");
+    const app = document.getElementById("app")!;
     app.appendChild(modal);
 
     const dialog = document.createElement("div");
@@ -127,7 +275,7 @@ export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: bool
 
 
 export function drawBoard(game: Game) {
-  const app = document.getElementById("app");
+  const app = document.getElementById("app")!;
 
   if (app.firstChild) {
     app.removeChild(app.firstChild);
@@ -164,7 +312,7 @@ export function drawBoard(game: Game) {
   PositionHelper.getPositions().forEach(position => {
     const playerName = document.createElement("div");
     playerName.classList.add("player-name", position + "-player-name");
-    playerName.textContent = players.get(position).name;
+    playerName.textContent = players.get(position)!.name;
     baize.appendChild(playerName);
   });
 
@@ -194,7 +342,7 @@ export function drawBoard(game: Game) {
 
     const teamPointsDiv = document.createElement("div");
     teamPointsDiv.classList.add("team-points");
-    teamPointsDiv.textContent = game.scores.get(team).toString();
+    teamPointsDiv.textContent = game.scores.get(team)!.toString();
     teamScoreDiv.appendChild(teamPointsDiv);
 
     const teamDetailsDiv = document.createElement("div");
@@ -210,7 +358,7 @@ export function drawBoard(game: Game) {
       const playerDiv = document.createElement("div");
       playerDiv.classList.add("player");
       playerDiv.textContent = player.name;
-      if (player.isHuman) {
+      if (player.isHuman()) {
         playerDiv.classList.add("human");
       }
       teamDetailsDiv.appendChild(playerDiv);
@@ -236,7 +384,7 @@ export function drawBoard(game: Game) {
 
     const trumpSuitImage = document.createElement("img");
     trumpSuitImage.classList.add("trump-suit-image");
-    trumpSuitImage.src = `/images/${RankHelper.getRankFromAbbreviation(Rank.ACE)}${SuitHelper.getSuitAbbreviation(round.trumpSuit)}.png`;
+    trumpSuitImage.src = `/images/${RankHelper.getRankFromAbbreviation(Rank.ACE)}${SuitHelper.getSuitAbbreviation(round.trumpSuit!)}.png`;
     trumpDiv.appendChild(trumpSuitImage);
 
     const trumpDetailsDiv = document.createElement("div");
@@ -378,19 +526,19 @@ function drawPlayerHandsDiv(round: Round, playerAreas: Map<Position, HTMLDivElem
     const playerHand = document.createElement("div");
     playerHand.classList.add("player-hand");
     playerArea.appendChild(playerHand);
-    const playerCards: Card[] = round.playerHands.get(player);
+    const playerCards: Card[] = round.playerHands.get(player)!;
     const rotated: boolean = position === Position.RIGHT || position === Position.LEFT;
     if (position === Position.BOTTOM) {
-      let allowedCards = [];
+      let allowedCards: Card[] = [];
       if (round.currentTrick) {
-        allowedCards = round.getAllowedCards(player, round.currentTrick!, round.trumpSuit);
+        allowedCards = round.getAllowedCards(player, round.currentTrick!, round.trumpSuit!);
       }
       for (const card of playerCards!) {
-        playerHand.appendChild(makeCardImage(card, player.isHuman, rotated, allowedCards.includes(card)));
+        playerHand.appendChild(makeCardImage(card, player.isHuman(), rotated, allowedCards.includes(card)));
       }
     } else {
       for (const card of playerCards!) {
-        playerHand.appendChild(makeCardImage(card, player.isHuman, rotated, player.isHuman));
+        playerHand.appendChild(makeCardImage(card, player.isHuman(), rotated, player.isHuman()));
       }
     }
   });

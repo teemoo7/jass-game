@@ -62,19 +62,19 @@ export class CardHelper {
 
   static computeCardValue(card: Card, isTrump: boolean): number {
     if (isTrump) {
-      return this.TRUMP_CARDS_VALUES.get(card.rank);
+      return this.TRUMP_CARDS_VALUES.get(card.rank)!;
     }
-    return this.CARDS_VALUES.get(card.rank);
+    return this.CARDS_VALUES.get(card.rank)!;
   }
 
   static computeCardPower(card: Card, isTrump: boolean): number {
     return this.computeCardRankPower(card.rank, isTrump);
   }
 
-  static computeCardRankPower(rank: string, isTrump: boolean) {
+  static computeCardRankPower(rank: string, isTrump: boolean): number {
     if (isTrump) {
-      return this.TRUMP_CARDS_POWERS.get(rank);
+      return this.TRUMP_CARDS_POWERS.get(rank)!;
     }
-    return this.CARDS_POWERS.get(rank);
+    return this.CARDS_POWERS.get(rank)!;
   }
 }

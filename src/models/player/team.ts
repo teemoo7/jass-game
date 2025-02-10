@@ -3,9 +3,9 @@ import { Player } from "./player.ts";
 export class Team {
   readonly player1: Player;
   readonly player2: Player;
-  readonly name: String;
+  readonly name: string;
 
-  constructor(player1: Player, player2: Player, name: String) {
+  constructor(player1: Player, player2: Player, name: string) {
     this.player1 = player1;
     this.player2 = player2;
     this.name = name;
@@ -25,5 +25,6 @@ export class Team {
     } else if (this.player2 === player) {
       return this.player1;
     }
+    throw new Error("Player is not in the team");
   }
 }

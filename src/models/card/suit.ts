@@ -7,7 +7,7 @@ export enum Suit {
 
 export class SuitHelper {
   static getSuits(): Suit[] {
-    return Object.keys(Suit).map((suit) => Suit[suit]);
+    return Object.keys(Suit).map((suit) => Suit[suit as keyof typeof Suit]);
   }
 
   static getSuitAbbreviation(suit: Suit): string {
@@ -33,6 +33,8 @@ export class SuitHelper {
         return Suit.CLUBS;
       case "S":
         return Suit.SPADES;
+      default:
+        throw new Error("Invalid abbreviation");
     }
   }
 

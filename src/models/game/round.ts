@@ -8,15 +8,16 @@ import Utils from "../../utils/utils.ts";
 import { GameMode } from "./gamemode.ts";
 import { Meld } from "./meld.ts";
 import { drawTrumpDecisionDiv } from "../../ui/board.ts";
+import { Bot } from "../player/bot.ts";
 
 export class Round {
   readonly number: number;
   readonly teams: Team[];
   readonly gameMode: GameMode;
   readonly scores: Map<Team, number>;
-  currentTrick: Trick;
+  currentTrick: Trick | undefined;
   playedTricks: Trick[];
-  trumpSuit: Suit;
+  trumpSuit: Suit | undefined;
   readonly trumpDecider: Player;
   trumpDecisionPassed: boolean;
   readonly playerHands: Map<Player, Card[]>;
@@ -66,7 +67,7 @@ export class Round {
   sortHumanPlayerHand(): void {
     // first group by suit, then sort by rank
     for (const [player, hand] of this.playerHands) {
-      if (player.isHuman) {
+      if (player.isHuman()) {
         let sortedHand: Card[] = [];
         for (const suit of SuitHelper.getSuits()) {
           console.log(`Current suit to be sorted: ${suit}`);
@@ -114,8 +115,8 @@ export class Round {
   }
 
   getAllowedCards(currentPlayer: Player, currentTrick: Trick, trumpSuit: Suit): Card[] {
-    const hand = this.playerHands.get(currentPlayer);
-    let allowedCards = [];
+    const hand = this.playerHands.get(currentPlayer)!;
+    let allowedCards: Card[] = [];
 
     const trickFirstCard = currentTrick.playedCards[0];
     if (trickFirstCard) {
@@ -164,6 +165,7 @@ export class Round {
     const nonTrumpCards = allowedCards.filter((card) => card.suit !== trumpSuit);
     const trumpCards = allowedCards.filter((card) => card.suit === trumpSuit);
 
+    const level: number = currentPlayer.isHuman() ? 0 : (currentPlayer as Bot).level;
     const teamMate = this.getTeamMate(currentPlayer);
     const isLastToPlay: boolean = currentTrick.playedCards.length === 3;
     const isFirstToPlay: boolean = currentTrick.playedCards.length === 0;
@@ -171,13 +173,18 @@ export class Round {
     const suitToFollow: Suit | undefined = currentTrick.playedCards[0]?.card.suit;
     const trickScore: number = currentTrick.computeTrickScore();
 
-    if (isLastToPlay && currentTrickWinner === teamMate) {
+    if (isLastToPlay && currentTrickWinner === teamMate && level >= 1) {
       // If you are the last to play and your partner is winning the trick, play the card with the highest value, but preferably a ten rather than an ace
       if (nonTrumpCards.length > 0) {
         const tenCard = nonTrumpCards.find((card) => card.rank === Rank.TEN);
         if (tenCard) {
           console.log("AI: If you are the last to play and your partner is winning the trick, play a non-trump ten");
           return tenCard;
+        } else {
+          console.log("AI: If you are the last to play and your partner is winning the trick, play the non-trump card with the highest value");
+          return nonTrumpCards.reduce((highest, card) => {
+            return CardHelper.computeCardValue(card, card.suit === trumpSuit) > CardHelper.computeCardValue(highest, highest.suit === trumpSuit) ? card : highest;
+          });
         }
       }
       if (suitToFollow === trumpSuit) {
@@ -189,7 +196,7 @@ export class Round {
       }
     }
 
-    if (isLastToPlay && currentTrickWinner !== teamMate) {
+    if (isLastToPlay && currentTrickWinner !== teamMate && level >= 2) {
       // If you are the last to play and your partner is losing the trick, and you have a better card to win the trick, play it, otherwise play the card with the lowest value
       const winningCard = currentTrick.computeWinningPlayedCard()?.card;
 
@@ -206,7 +213,7 @@ export class Round {
       }
     }
 
-    if (!isFirstToPlay && currentTrickWinner !== teamMate) {
+    if (!isFirstToPlay && currentTrickWinner !== teamMate && level >= 2) {
       // If there is a high value in the current trick, and you are not sure that your partner will win it, and you have a trump card, play it
       if (trickScore >= 10 && trumpCards.length > 0) {
         console.log("AI: If there is a high value in the current trick, and you are not sure that your partner will win it, and you have a trump card, play it");
@@ -216,7 +223,7 @@ export class Round {
       }
     }
 
-    if (isFirstToPlay && nonTrumpCards.length > 0) {
+    if (isFirstToPlay && nonTrumpCards.length > 0 && level >= 1) {
       // If you are the first to play, and you have a card that is winning over all remaining cards in all hands, play it, unless it's in trump suit
       SuitHelper.getSuits().filter((suit) => suit !== this.trumpSuit).forEach((suit) => {
         const suitCards = nonTrumpCards.filter((card) => card.suit === suit);
@@ -234,7 +241,7 @@ export class Round {
     }
 
     // If you are the first to play, and you have chosen the trump suit, play the most powerful card in that suit, unless you know that the other team has no more trump cards
-    if (isFirstToPlay && this.trumpDecider === currentPlayer && trumpCards.length > 0) {
+    if (isFirstToPlay && this.trumpDecider === currentPlayer && trumpCards.length > 0 && level >= 3) {
       const maxPowerInTrump = trumpCards.reduce((max, card) => {
         return CardHelper.computeCardPower(card, true) > CardHelper.computeCardPower(max, true) ? card : max;
       });
@@ -269,7 +276,7 @@ export class Round {
   }
 
   addScore(team: Team, score: number): void {
-    this.scores.set(team, score + this.scores.get(team));
+    this.scores.set(team, score + this.scores.get(team)!);
   }
 
   getPlayedTrumpCards(): Card[] {
@@ -282,7 +289,7 @@ export class Round {
   async decideTrumpSuit(player: Player, canPass: boolean): Promise<Suit> {
     let trumpSuit: Suit;
 
-    const hand: Card[] = this.playerHands.get(player);
+    const hand: Card[] = this.playerHands.get(player)!;
     console.log(`${player.name} is deciding trump suit with hand: ${hand.map((card) => `${card.rank} of ${card.suit}`).join(", ")}`);
 
     const recommendedTrumpSuit = this.computeBestTrumpSuit(hand, canPass);
@@ -292,8 +299,7 @@ export class Round {
       this.trumpDecisionPassed = true;
       const teamMate = this.getTeamMate(player);
       console.log(`${player.name} passed to ${teamMate.name}`);
-      let teamMateTrumpSuit: Suit;
-      if (teamMate.isHuman) {
+      if (teamMate.isHuman()) {
         trumpSuit = await drawTrumpDecisionDiv(this, teamMate, false);
       } else {
         trumpSuit = await this.decideTrumpSuit(teamMate, false);
@@ -335,10 +341,10 @@ export class Round {
 
 
   getTeamMate(player: Player): Player {
-    return this.teams.find((team) => team.hasPlayer(player)).getTeamMate(player);
+    return this.teams.find((team) => team.hasPlayer(player))!.getTeamMate(player);
   }
 
   getOpponents(player: Player): Player[] {
-    return this.teams.find((team) => !team.hasPlayer(player)).getPlayers();
+    return this.teams.find((team) => !team.hasPlayer(player))!.getPlayers();
   }
 }

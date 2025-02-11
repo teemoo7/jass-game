@@ -384,7 +384,7 @@ export function drawBoard(game: Game) {
 
     const trumpSuitImage = document.createElement("img");
     trumpSuitImage.classList.add("trump-suit-image");
-    trumpSuitImage.src = `/images/${RankHelper.getRankFromAbbreviation(Rank.ACE)}${SuitHelper.getSuitAbbreviation(round.trumpSuit!)}.png`;
+    trumpSuitImage.src = `${import.meta.env.BASE_URL}images/${RankHelper.getRankFromAbbreviation(Rank.ACE)}${SuitHelper.getSuitAbbreviation(round.trumpSuit!)}.png`;
     trumpDiv.appendChild(trumpSuitImage);
 
     const trumpDetailsDiv = document.createElement("div");
@@ -587,7 +587,7 @@ function makeCardImage(card: Card, visible: boolean, rotated: boolean, allowed: 
     cardDiv.setAttribute("data-card", `${SuitHelper.getSuitAbbreviation(card.suit)}${card.rank}`);
     cardDiv.setAttribute("alt", `${card.rank} of ${card.suit}`);
     cardImage.classList.add("card-image");
-    cardImage.src = `/images/${card.rank}${SuitHelper.getSuitAbbreviation(card.suit)}.png`;
+    cardImage.src = `${import.meta.env.BASE_URL}images/${card.rank}${SuitHelper.getSuitAbbreviation(card.suit)}.png`;
     if (allowed) {
       cardDiv.classList.add("card-allowed");
     }
@@ -595,10 +595,10 @@ function makeCardImage(card: Card, visible: boolean, rotated: boolean, allowed: 
     cardDiv.classList.add("card-back");
     if (rotated) {
       cardImage.classList.add("card-image-rotated");
-      cardImage.src = "/images/gray_back_rotated.png";
+      cardImage.src = `${import.meta.env.BASE_URL}images/gray_back_rotated.png`;
     } else {
       cardImage.classList.add("card-image");
-      cardImage.src = "/images/gray_back.png";
+      cardImage.src = `${import.meta.env.BASE_URL}images/gray_back.png`;
     }
   }
   cardDiv.appendChild(cardImage);
@@ -617,7 +617,7 @@ function makeIllustrationCardImage(card: Card): HTMLDivElement {
 
   let cardImage = document.createElement("img");
   cardImage.classList.add("card-image-small");
-  cardImage.src = `/images/${card.rank}${SuitHelper.getSuitAbbreviation(card.suit)}.png`;
+  cardImage.src = `${import.meta.env.BASE_URL}images/${card.rank}${SuitHelper.getSuitAbbreviation(card.suit)}.png`;
   cardDiv.appendChild(cardImage);
 
   return cardDiv;
@@ -630,7 +630,7 @@ function makePlayedCardImage(card: Card): HTMLDivElement {
 
   let cardImage = document.createElement("img");
   cardImage.classList.add("card-image");
-  cardImage.src = `/images/${card.rank}${SuitHelper.getSuitAbbreviation(card.suit)}.png`;
+  cardImage.src = `${import.meta.env.BASE_URL}images/${card.rank}${SuitHelper.getSuitAbbreviation(card.suit)}.png`;
   cardDiv.appendChild(cardImage);
 
   return cardDiv;

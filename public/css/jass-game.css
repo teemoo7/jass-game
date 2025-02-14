@@ -31,11 +31,48 @@ html, body {
     border-radius: 5px;
     box-shadow: #1a1a1a 0 0 10px;
     z-index: 1000;
-    width: 700px;
+}
+
+#newGameSettings div {
+    text-align: center;
+    margin: 10px;
+}
+
+#newGameSettings input {
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid lightgray;
+    background-color: #1a1a1a;
+    color: white;
+    margin: 5px;
+}
+
+#newGameSettings select {
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid lightgray;
+    background-color: #1a1a1a;
+    color: white;
+    margin: 5px;
+}
+
+#newGameSettings button {
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: auto;
+    display: block;
+    border: 1px solid #095f67;
+    box-shadow: #095f67 0 0 10px;
+    background-color: #095f67;
+    color: lightgray;
+    font-weight: bold;
 }
 
 #container {
     display: flex;
+    width: 1280px;
+    margin: auto;
 }
 
 #baize {
@@ -49,8 +86,23 @@ html, body {
     box-shadow: 0 0 20px 10px #1a1a1a;
 }
 
+@media only screen and (max-width: 1250px) {
+    #container {
+        display: block;
+        width: 360px;
+        margin: auto;
+        padding-top: 5px;
+    }
+
+    #baize {
+        width: 360px;
+        height: 360px;
+        margin: 0;
+        border: none;
+    }
+}
+
 .area {
-    /*background-color: indianred;*/
     display: flex;
     justify-content: center;
     align-items: center;
@@ -86,6 +138,35 @@ html, body {
     top: 100px;
     width: 150px;
     height: 700px;
+}
+
+@media only screen and (max-width: 1250px) {
+    .bottom-area {
+        top: 315px;
+        left: 40px;
+        width: 280px;
+        height: 45px;
+    }
+
+    .top-area {
+        left: 40px;
+        top: 0;
+        width: 280px;
+        height: 45px;
+    }
+
+    .left-area {
+        top: 40px;
+        width: 45px;
+        height: 280px;
+    }
+
+    .right-area {
+        top: 40px;
+        left: 315px;
+        width: 45px;
+        height: 280px;
+    }
 }
 
 .player-name {
@@ -133,6 +214,41 @@ html, body {
     writing-mode: vertical-lr;
 }
 
+@media only screen and (max-width: 1250px) {
+    .player-name {
+        font-size: 0.8em;
+        line-height: normal;
+    }
+
+    .bottom-player-name {
+        left: 40px;
+        top: 295px;
+        width: 280px;
+        height: 20px;
+    }
+
+    .right-player-name {
+        left: 295px;
+        top: 40px;
+        width: 20px;
+        height: 280px;
+    }
+
+    .top-player-name {
+        left: 40px;
+        top: 45px;
+        width: 280px;
+        height: 20px;
+    }
+
+    .left-player-name {
+        left: 45px;
+        top: 40px;
+        width: 20px;
+        height: 280px;
+    }
+}
+
 .left-area img.card-image {
     transform: rotate(90deg);
 }
@@ -171,14 +287,69 @@ div.left-trick-card {
     top: 390px;
 }
 
+#trickPointsValue {
+    position: absolute;
+    top: 390px;
+    left: 410px;
+    width: 80px;
+    height: 120px;
+    text-align: center;
+    line-height: 120px;
+}
+
+@media only screen and (max-width: 1250px) {
+    div.trick-card {
+        width: 30px;
+        height: 45px;
+        padding-top: 5px;
+    }
+
+    div.bottom-trick-card {
+        left: 165px;
+        top: 202px;
+    }
+
+    div.right-trick-card {
+        left: 195px;
+        top: 157px;
+    }
+
+    div.top-trick-card {
+        left: 165px;
+        top: 112px;
+    }
+
+    div.left-trick-card {
+        left: 135px;
+        top: 157px;
+    }
+
+    #trickPointsValue {
+        top: 157px;
+        left: 165px;
+        width: 30px;
+        height: 45px;
+        line-height: 45px;
+    }
+}
+
 #scoreboard {
-    width: 300px;
     background-color: #1a1a1a;
     color: white;
     border: 1px solid darkgray;
     border-radius: 5px;
     padding: 20px;
     margin: 10px;
+    width: 280px;
+}
+
+@media only screen and (max-width: 1250px) {
+    #scoreboard {
+        width: 360px;
+        margin: 10px 0 0;
+        padding: 2px;
+        border: none;
+    }
 }
 
 .title {
@@ -186,6 +357,7 @@ div.left-trick-card {
     font-size: 1.5em;
     margin-bottom: 10px;
     color: darkgray;
+    font-weight: bold;
 }
 
 .subtitle {
@@ -198,6 +370,22 @@ div.left-trick-card {
 .lead {
     font-weight: bold;
     color: darkgray;
+}
+
+@media only screen and (max-width: 1250px) {
+    .title {
+        font-size: 1.2em;
+        margin-bottom: 5px;
+    }
+
+    .subtitle {
+        font-size: 1.1em;
+        margin-bottom: 5px;
+    }
+
+    .lead {
+        font-size: 1em;
+    }
 }
 
 div.team-score {
@@ -237,6 +425,42 @@ div.team-details {
     color: #095f67;
 }
 
+@media only screen and (max-width: 1250px) {
+    #teams {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    div.team-score {
+        border: 1px solid #1a1a1a;
+        margin-bottom: 2px;
+        padding: 2px;
+        width: 45%;
+    }
+
+    div.team-points {
+        font-size: 1.5em;
+    }
+
+    div.team-details {
+        padding-left: 10px;
+    }
+
+    .team {
+        font-size: 0.8em;
+    }
+
+    .player {
+        font-size: 0.7em;
+        margin-left: 10px;
+    }
+
+    .human {
+    }
+}
+
 #round {
     margin-top: 50px;
 }
@@ -248,11 +472,6 @@ div.team-details {
     justify-content: center;
 }
 
-#trump img.trump-suit-image {
-    width: 70px;
-    height: 100px;
-}
-
 #trump div#trumpDetails {
     margin-left: 20px;
 }
@@ -262,7 +481,31 @@ div.team-details {
     color: #095f67;
 }
 
-.melds {
+img.trump-suit-image {
+    width: 70px;
+    height: 100px;
+}
+
+.trump-decider {
+    color: dimgrey;
+}
+
+.trump-suit-value {
+    color: darkgray;
+    font-weight: bold;
+}
+
+.trump-decider-player {
+    font-weight: bold;
+    color: darkgray;
+}
+
+#melds {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+#meldsContent {
 }
 
 .meld {
@@ -291,38 +534,78 @@ div.team-details {
     width: 50px;
 }
 
-#trick {
-    margin-top: 25px;
-    color: dimgrey;
-}
+@media only screen and (max-width: 1250px) {
+    #round {
+        margin-top: 5px;
+    }
 
-#trick .trick-points {
-    font-weight: bold;
-    color: lightgray;
-}
+    #trump {
+        padding: 0;
+        display: flex;
+        margin-bottom: 5px;
+        justify-content: center;
+    }
 
-#trick .trick-winning-player-name {
-    font-weight: bold;
-    color: lightgray;
-}
+    #trump div#trumpDetails {
+        margin-left: 20px;
+    }
 
-img.trump-suit-image {
-    width: 70px;
-    height: 100px;
-}
+    img.trump-suit-image {
+        width: 30px;
+        height: 45px;
+    }
 
-.trump-decider {
-    color: dimgrey;
-}
+    .trump-decider {
+        font-size: 0.7em;
+    }
 
-.trump-suit-value {
-    color: darkgray;
-    font-weight: bold;
-}
+    .trump-suit-value {
+        font-size: 0.8em;
+    }
 
-.trump-decider-player {
-    font-weight: bold;
-    color: darkgray;
+    .trump-decider-player {
+    }
+
+    #melds {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+
+    .meld {
+        display: flex;
+    }
+
+    .meld-highest-card {
+        width: 50px;
+    }
+
+    .meld-player {
+        color: dimgray;
+        margin-left: 5px;
+        width: 50px;
+        font-size: 0.8em;
+    }
+
+    .meld-type {
+        color: lightgray;
+        margin-left: 5px;
+        width: 50px;
+        font-size: 0.8em;
+    }
+
+    .meld-points {
+        margin-left: 5px;
+        color: dimgrey;
+        width: 30px;
+        font-size: 0.8em;
+    }
+
+    .meld-highest-card {
+        width: 30px;
+    }
 }
 
 div.player-hand {
@@ -342,12 +625,27 @@ div.card {
     overflow: hidden;
 }
 
+div.card-winning {
+    border: 1px solid #095f67;
+    box-shadow: white 0 0 10px;
+}
+
 div.card-normal {
     margin: 0 1px;
 }
 
 div.card-rotated {
     margin: 1px 0;
+}
+
+@media only screen and (max-width: 1250px) {
+    div.card-normal {
+        margin: 0;
+    }
+
+    div.card-rotated {
+        margin: 0;
+    }
 }
 
 img.card-image-small {
@@ -370,9 +668,37 @@ img.card-image-rotated {
     box-shadow: #1a1a1a 0 0 10px;
 }
 
+@media only screen and (max-width: 1250px) {
+    img.card-image-small {
+        width: 20px;
+        height: 30px;
+        box-shadow: #1a1a1a 0 0 10px;
+        border-radius: 1px;
+    }
+
+    img.card-image {
+        width: 30px;
+        height: 45px;
+        box-shadow: #1a1a1a 0 0 10px;
+        border-radius: 1px;
+    }
+
+    img.card-image-rotated {
+        width: 45px;
+        height: 30px;
+        box-shadow: #1a1a1a 0 0 10px;
+    }
+}
+
 div.card-playable {
     cursor: pointer;
     box-shadow: white 0 0 10px;
+}
+
+@media only screen and (max-width: 1250px) {
+    div.card-playable {
+        box-shadow: white 0 0 5px;
+    }
 }
 
 div.card-cover {
@@ -386,8 +712,8 @@ div.card-cover {
     border-radius: 2px;
 }
 
-
 #trumpDecision {
+    min-width: 700px;
 }
 
 .trump-decision-info {
@@ -442,4 +768,32 @@ div.card-cover {
     justify-content: center;
     gap: 5px;
     margin-top: 10px;
+}
+
+@media only screen and (max-width: 1250px) {
+    #trumpDecision {
+        min-width: 300px;
+    }
+
+    .trump-decision-suits {
+        gap: 0;
+    }
+
+    .trump-decision-hand {
+        gap: 0;
+    }
+}
+
+#playedTrumpCards {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 20px;
+}
+
+@media only screen and (max-width: 1250px) {
+    #playedTrumpCards {
+        gap: 1px;
+        margin-top: 1px;
+    }
 }

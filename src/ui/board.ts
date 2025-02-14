@@ -42,6 +42,8 @@ export function delay() {
   return new Promise(resolve => setTimeout(resolve, 1000));
 }
 
+//todo: create builder for document elements
+
 export function drawNewGameSettings(): Promise<Game> {
   return new Promise(resolve => {
     const newGameSettingsDiv = document.createElement("div");
@@ -64,49 +66,32 @@ export function drawNewGameSettings(): Promise<Game> {
     newGameSettingsDiv.appendChild(title);
 
     const gameModeDiv = document.createElement("div");
-    gameModeDiv.id = "gameMode";
     newGameSettingsDiv.appendChild(gameModeDiv);
 
-    const gameModeTitle = document.createElement("div");
-    gameModeTitle.classList.add("subtitle");
-    gameModeTitle.textContent = "Game mode";
-    gameModeDiv.appendChild(gameModeTitle);
+    const gameModeLabel = document.createElement("label");
+    gameModeLabel.textContent = "Game mode";
+    gameModeDiv.appendChild(gameModeLabel);
 
-    const gameModeOptions = document.createElement("div");
-    gameModeOptions.classList.add("game-mode-options");
-    gameModeDiv.appendChild(gameModeOptions);
+    const gameModeSelect = document.createElement("select");
+    gameModeSelect.id = "gameModeSelect";
+    gameModeDiv.appendChild(gameModeSelect);
 
-    const gameModeNormalInput = document.createElement("input");
-    gameModeNormalInput.type = "radio";
-    gameModeNormalInput.name = "gameMode";
-    gameModeNormalInput.value = GameMode.NORMAL;
-    gameModeNormalInput.classList.add("game-mode-option");
-    gameModeNormalInput.checked = true;
-    gameModeOptions.appendChild(gameModeNormalInput);
+    const gameModeNormalOption = document.createElement("option");
+    gameModeNormalOption.value = GameMode.NORMAL;
+    gameModeNormalOption.textContent = "Normal (1000 pts)";
+    gameModeSelect.appendChild(gameModeNormalOption);
 
-    const gameModeNormalLabel = document.createElement("label");
-    gameModeNormalLabel.textContent = "Normal (1000 pts)";
-    gameModeOptions.appendChild(gameModeNormalLabel);
-
-    const gameModeDoubledSpadesInput = document.createElement("input");
-    gameModeDoubledSpadesInput.type = "radio";
-    gameModeDoubledSpadesInput.name = "gameMode";
-    gameModeDoubledSpadesInput.value = GameMode.DOUBLED_SPADES;
-    gameModeDoubledSpadesInput.classList.add("game-mode-option");
-    gameModeOptions.appendChild(gameModeDoubledSpadesInput);
-
-    const gameModeDoubledSpadesLabel = document.createElement("label");
-    gameModeDoubledSpadesLabel.textContent = "Doubled spades (1500 pts)";
-    gameModeOptions.appendChild(gameModeDoubledSpadesLabel);
+    const gameModeDoubledSpadesOption = document.createElement("option");
+    gameModeDoubledSpadesOption.value = GameMode.DOUBLED_SPADES;
+    gameModeDoubledSpadesOption.textContent = "Doubled spades (1500 pts)";
+    gameModeSelect.appendChild(gameModeDoubledSpadesOption);
 
     const playerNameDiv = document.createElement("div");
-    playerNameDiv.id = "playerName";
     newGameSettingsDiv.appendChild(playerNameDiv);
 
-    const playerNameTitle = document.createElement("div");
-    playerNameTitle.classList.add("subtitle");
-    playerNameTitle.textContent = "Player name";
-    playerNameDiv.appendChild(playerNameTitle);
+    const playerNameLabel = document.createElement("label");
+    playerNameLabel.textContent = "Player name";
+    playerNameDiv.appendChild(playerNameLabel);
 
     const playerNameInput = document.createElement("input");
     playerNameInput.type = "text";
@@ -118,10 +103,9 @@ export function drawNewGameSettings(): Promise<Game> {
     teamNameDiv.id = "teamName";
     newGameSettingsDiv.appendChild(teamNameDiv);
 
-    const teamNameTitle = document.createElement("div");
-    teamNameTitle.classList.add("subtitle");
-    teamNameTitle.textContent = "Team name";
-    teamNameDiv.appendChild(teamNameTitle);
+    const teamNameLabel = document.createElement("label");
+    teamNameLabel.textContent = "Team name";
+    teamNameDiv.appendChild(teamNameLabel);
 
     const teamNameInput = document.createElement("input");
     teamNameInput.type = "text";
@@ -130,13 +114,11 @@ export function drawNewGameSettings(): Promise<Game> {
     teamNameDiv.appendChild(teamNameInput);
 
     const botsLevelDiv = document.createElement("div");
-    botsLevelDiv.id = "botsLevel";
     newGameSettingsDiv.appendChild(botsLevelDiv);
 
-    const botsLevelTitle = document.createElement("div");
-    botsLevelTitle.classList.add("subtitle");
-    botsLevelTitle.textContent = "Bots level";
-    botsLevelDiv.appendChild(botsLevelTitle);
+    const botsLevelLabel = document.createElement("label");
+    botsLevelLabel.textContent = "Bots level";
+    botsLevelDiv.appendChild(botsLevelLabel);
 
     const botsLevelSelect = document.createElement("select");
     botsLevelSelect.id = "botsLevelSelect";
@@ -163,11 +145,16 @@ export function drawNewGameSettings(): Promise<Game> {
     botsLevelHardOption.selected = true;
     botsLevelSelect.appendChild(botsLevelHardOption);
 
+    const startButtonDiv = document.createElement("div");
+    newGameSettingsDiv.appendChild(startButtonDiv);
+
     const startButton = document.createElement("button");
     startButton.textContent = "Start game";
-    newGameSettingsDiv.appendChild(startButton);
+    startButtonDiv.appendChild(startButton);
+
     startButton.addEventListener("click", () => {
-      const gameMode = (document.querySelector('input[name="gameMode"]:checked') as HTMLInputElement)!.value as GameMode;
+      const gameMode = (document.getElementById("gameModeSelect") as HTMLSelectElement).value as GameMode;
+      // const gameMode = (document.querySelector('input[name="gameMode"]:checked') as HTMLInputElement)!.value as GameMode;
       const playerName = (document.getElementById("playerNameInput") as HTMLInputElement).value;
       const playerHuman: Player = new Human(playerName);
       const botsLevel = parseInt((document.getElementById("botsLevelSelect") as HTMLSelectElement).value);
@@ -335,10 +322,14 @@ export function drawBoard(game: Game) {
   scoreboardTitle.textContent = "Scoreboard";
   scoreboardDiv.appendChild(scoreboardTitle);
 
+  const teamsDiv = document.createElement("div");
+  teamsDiv.id = "teams";
+  scoreboardDiv.appendChild(teamsDiv);
+
   for (const team of game.teams) {
     const teamScoreDiv = document.createElement("div");
     teamScoreDiv.classList.add("team-score");
-    scoreboardDiv.appendChild(teamScoreDiv);
+    teamsDiv.appendChild(teamScoreDiv);
 
     const teamPointsDiv = document.createElement("div");
     teamPointsDiv.classList.add("team-points");
@@ -382,34 +373,36 @@ export function drawBoard(game: Game) {
     trumpDiv.id = "trump";
     roundDiv.appendChild(trumpDiv);
 
-    const trumpSuitImage = document.createElement("img");
-    trumpSuitImage.classList.add("trump-suit-image");
-    trumpSuitImage.src = `${import.meta.env.BASE_URL}images/${RankHelper.getRankFromAbbreviation(Rank.ACE)}${SuitHelper.getSuitAbbreviation(round.trumpSuit!)}.png`;
-    trumpDiv.appendChild(trumpSuitImage);
+    if (round.trumpSuit) {
+      const trumpSuitImage = document.createElement("img");
+      trumpSuitImage.classList.add("trump-suit-image");
+      trumpSuitImage.src = `${import.meta.env.BASE_URL}images/${RankHelper.getRankFromAbbreviation(Rank.ACE)}${SuitHelper.getSuitAbbreviation(round.trumpSuit!)}.png`;
+      trumpDiv.appendChild(trumpSuitImage);
 
-    const trumpDetailsDiv = document.createElement("div");
-    trumpDetailsDiv.id = "trumpDetails";
-    trumpDiv.appendChild(trumpDetailsDiv);
+      const trumpDetailsDiv = document.createElement("div");
+      trumpDetailsDiv.id = "trumpDetails";
+      trumpDiv.appendChild(trumpDetailsDiv);
 
-    const trumpTitle = document.createElement("div");
-    trumpTitle.classList.add("subtitle");
-    trumpTitle.textContent = "Trump";
-    trumpDetailsDiv.appendChild(trumpTitle);
+      const trumpTitle = document.createElement("div");
+      trumpTitle.classList.add("subtitle");
+      trumpTitle.textContent = "Trump";
+      trumpDetailsDiv.appendChild(trumpTitle);
 
-    const trumpSuit = document.createElement("div");
-    trumpSuit.classList.add("trump-suit-value");
-    trumpSuit.textContent = `${round.trumpSuit}`;
-    trumpDetailsDiv.appendChild(trumpSuit);
+      const trumpSuit = document.createElement("div");
+      trumpSuit.classList.add("trump-suit-value");
+      trumpSuit.textContent = `${round.trumpSuit}`;
+      trumpDetailsDiv.appendChild(trumpSuit);
 
-    const trumpDeciderDiv = document.createElement("div");
-    trumpDeciderDiv.classList.add("trump-decider");
-    trumpDeciderDiv.textContent = `Decided by `;
-    trumpDetailsDiv.appendChild(trumpDeciderDiv);
+      const trumpDeciderDiv = document.createElement("div");
+      trumpDeciderDiv.classList.add("trump-decider");
+      trumpDeciderDiv.textContent = `Decided by `;
+      trumpDetailsDiv.appendChild(trumpDeciderDiv);
 
-    const trumpDeciderPlayerSpan = document.createElement("span");
-    trumpDeciderPlayerSpan.classList.add("trump-decider-player");
-    trumpDeciderPlayerSpan.textContent = `${round.trumpDecider.name}`;
-    trumpDeciderDiv.appendChild(trumpDeciderPlayerSpan);
+      const trumpDeciderPlayerSpan = document.createElement("span");
+      trumpDeciderPlayerSpan.classList.add("trump-decider-player");
+      trumpDeciderPlayerSpan.textContent = `${round.trumpDecider.name}`;
+      trumpDeciderDiv.appendChild(trumpDeciderPlayerSpan);
+    }
 
     /* Melds */
     const meldsDiv = document.createElement("div");
@@ -421,78 +414,37 @@ export function drawBoard(game: Game) {
     meldsTitle.textContent = "Melds";
     meldsDiv.appendChild(meldsTitle);
 
-    if (round.provisionalMelds.size > 0) {
-      const meldsTitle = document.createElement("div");
-      meldsTitle.classList.add("lead");
-      meldsTitle.textContent = "Provisional";
-      meldsDiv.appendChild(meldsTitle);
+    const meldsContentDiv = document.createElement("div");
+    meldsContentDiv.id = "meldsContent";
+    meldsDiv.appendChild(meldsContentDiv);
 
+    if (round.provisionalMelds.size > 0) {
+      meldsTitle.textContent += " (prov.)";
       for (const [player, meld] of round.provisionalMelds) {
-        meldsDiv.appendChild(makeMeldDiv(player, meld, false));
+        meldsContentDiv.appendChild(makeMeldDiv(player, meld, false));
       }
     }
 
     if (round.definitiveMelds.size > 0) {
-      const meldsTitle = document.createElement("div");
-      meldsTitle.classList.add("lead");
-      meldsTitle.textContent = "Definitive";
-      meldsDiv.appendChild(meldsTitle);
-
+      meldsTitle.textContent += " (final)";
       for (const [player, meld] of round.definitiveMelds) {
-        meldsDiv.appendChild(makeMeldDiv(player, meld, true));
+        meldsContentDiv.appendChild(makeMeldDiv(player, meld, true));
       }
     }
 
     const playedTrumpCards: Card[] = round.getPlayedTrumpCards();
     if (playedTrumpCards.length > 0) {
+      const playedTrumpCardsTitle = document.createElement("div");
+      playedTrumpCardsTitle.classList.add("subtitle");
+      playedTrumpCardsTitle.textContent = "Played trump cards (" + playedTrumpCards.length + ")";
+      roundDiv.appendChild(playedTrumpCardsTitle);
+
       const playedTrumpCardsDiv = document.createElement("div");
       playedTrumpCardsDiv.id = "playedTrumpCards";
       roundDiv.appendChild(playedTrumpCardsDiv);
 
-      const playedTrumpCardsTitle = document.createElement("div");
-      playedTrumpCardsTitle.classList.add("subtitle");
-      playedTrumpCardsTitle.textContent = "Played trump cards";
-      playedTrumpCardsDiv.appendChild(playedTrumpCardsTitle);
-
       for (const card of playedTrumpCards) {
         playedTrumpCardsDiv.appendChild(makeIllustrationCardImage(card));
-      }
-    }
-
-    /* Trick scoreboard */
-    const trickDiv = document.createElement("div");
-    trickDiv.id = "trick";
-    scoreboardDiv.appendChild(trickDiv);
-
-    const trickTitle = document.createElement("div");
-    trickTitle.classList.add("title");
-    trickTitle.textContent = "Current trick";
-    trickDiv.appendChild(trickTitle);
-
-    if (trick) {
-      const trickPointsDiv = document.createElement("div");
-      trickDiv.appendChild(trickPointsDiv);
-
-      const trickPointsTextSpan = document.createElement("span");
-      trickPointsTextSpan.textContent = "Value: ";
-      trickPointsDiv.appendChild(trickPointsTextSpan);
-
-      const trickPointsValueSpan = document.createElement("span");
-      trickPointsValueSpan.classList.add("trick-points");
-      trickPointsValueSpan.textContent = `${trick.computeTrickScore()}`;
-      trickPointsDiv.appendChild(trickPointsValueSpan);
-
-      const winningPlayedCard = trick.computeWinningPlayedCard();
-      if (winningPlayedCard) {
-        const trickWinningPlayerDiv = document.createElement("div");
-        trickWinningPlayerDiv.classList.add("trick-winning-player");
-        trickDiv.appendChild(trickWinningPlayerDiv);
-        trickWinningPlayerDiv.textContent = `Winning: `;
-
-        const trickWinningPlayerNameSpan = document.createElement("span");
-        trickWinningPlayerNameSpan.classList.add("trick-winning-player-name");
-        trickWinningPlayerNameSpan.textContent = `${winningPlayedCard.player.name}`;
-        trickWinningPlayerDiv.appendChild(trickWinningPlayerNameSpan);
       }
     }
 
@@ -501,6 +453,11 @@ export function drawBoard(game: Game) {
 
     /* Trick */
     if (trick) {
+      const trickPointsValueSpan = document.createElement("span");
+      trickPointsValueSpan.id = "trickPointsValue";
+      trickPointsValueSpan.textContent = `${trick.computeTrickScore()}`;
+      baize.appendChild(trickPointsValueSpan);
+
       drawPlayedTrickDiv(trick, players, trickCardDivs);
     }
   }
@@ -508,12 +465,13 @@ export function drawBoard(game: Game) {
 }
 
 function drawPlayedTrickDiv(trick: Trick, players: Map<Position, Player>, trickCardDivs: Map<Position, HTMLDivElement>) {
+  const winningPlayedCard = trick.computeWinningPlayedCard();
   PositionHelper.getPositions().forEach(position => {
     const player = players.get(position)!;
     const playedCard = trick.getPlayedCardByPlayer(player);
     const trickCardDiv = trickCardDivs.get(position)!;
     if (playedCard) {
-      trickCardDiv.appendChild(makePlayedCardImage(playedCard.card));
+      trickCardDiv.appendChild(makePlayedCardImage(playedCard.card, playedCard === winningPlayedCard));
     }
   });
 }
@@ -623,9 +581,12 @@ function makeIllustrationCardImage(card: Card): HTMLDivElement {
   return cardDiv;
 }
 
-function makePlayedCardImage(card: Card): HTMLDivElement {
+function makePlayedCardImage(card: Card, isWinning: boolean): HTMLDivElement {
   const cardDiv = document.createElement("div");
   cardDiv.classList.add("card", "card-normal");
+  if (isWinning) {
+    cardDiv.classList.add("card-winning");
+  }
   cardDiv.setAttribute("alt", `${card.rank} of ${card.suit}`);
 
   let cardImage = document.createElement("img");

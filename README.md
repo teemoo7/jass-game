@@ -18,6 +18,8 @@ The game is made of a UI so that a human can play against 3 AI bots.
 :boom: You can play the game online in your
 browser: [https://www.micaelpaquier.com/jass-game](https://www.micaelpaquier.com/jass-game)
 
+Please note that the UI is *a bit* responsive, but not fully optimized for mobile devices.
+
 ### Local
 
 You may also play locally by cloning the repository and running the following commands:

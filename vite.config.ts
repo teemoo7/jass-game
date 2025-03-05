@@ -12,6 +12,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
+    environment: "jsdom",
     reporters: ["verbose"],
     coverage: {
       all: true,

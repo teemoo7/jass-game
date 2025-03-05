@@ -20,7 +20,7 @@ import {
   OptionBuilder,
   SelectBuilder,
   SpanBuilder
-} from "./utils.ts";
+} from "./builders.ts";
 
 export function waitForHumanPlayer(hand: Card[]): Promise<Card> {
   return new Promise(resolve => {
@@ -237,32 +237,8 @@ export function drawBoard(game: Game) {
 
   /* Scoreboard */
 
-  const scoreboardDiv = new DivBuilder().withId("scoreboard").build();
+  const scoreboardDiv = makeScoreboard(game, players);
   container.appendChild(scoreboardDiv);
-  scoreboardDiv.appendChild(new DivBuilder().withClassList(["title"]).withTextContent("Scoreboard").build());
-
-  const teamsDiv = new DivBuilder().withId("teams").build();
-  scoreboardDiv.appendChild(teamsDiv);
-
-  for (const team of game.teams) {
-    const teamScoreDiv = new DivBuilder().withClassList(["team-score"]).build();
-    teamsDiv.appendChild(teamScoreDiv);
-
-    teamScoreDiv.appendChild(new DivBuilder().withClassList(["team-points"]).withTextContent(game.scores.get(team)!.toString()).build());
-
-    const teamDetailsDiv = new DivBuilder().withClassList(["team-details"]).build();
-    teamScoreDiv.appendChild(teamDetailsDiv);
-
-    teamDetailsDiv.appendChild(new DivBuilder().withClassList(["team"]).withTextContent(team.name).build());
-
-    for (const player of team.getPlayers()) {
-      let classes = ["player"];
-      if (player.isHuman()) {
-        classes.push("human");
-      }
-      teamDetailsDiv.appendChild(new DivBuilder().withClassList(classes).withTextContent(player.name).build());
-    }
-  }
 
   if (round) {
 
@@ -338,6 +314,35 @@ export function drawBoard(game: Game) {
     }
   }
 
+}
+
+function makeScoreboard(game: Game, players: Map<Position, Player>): HTMLDivElement {
+  const scoreboardDiv = new DivBuilder().withId("scoreboard").build();
+  scoreboardDiv.appendChild(new DivBuilder().withClassList(["title"]).withTextContent("Scoreboard").build());
+
+  const teamsDiv = new DivBuilder().withId("teams").build();
+  scoreboardDiv.appendChild(teamsDiv);
+
+  for (const team of game.teams) {
+    const teamScoreDiv = new DivBuilder().withClassList(["team-score"]).build();
+    teamsDiv.appendChild(teamScoreDiv);
+
+    teamScoreDiv.appendChild(new DivBuilder().withClassList(["team-points"]).withTextContent(game.scores.get(team)!.toString()).build());
+
+    const teamDetailsDiv = new DivBuilder().withClassList(["team-details"]).build();
+    teamScoreDiv.appendChild(teamDetailsDiv);
+
+    teamDetailsDiv.appendChild(new DivBuilder().withClassList(["team"]).withTextContent(team.name).build());
+
+    for (const player of team.getPlayers()) {
+      let classes = ["player"];
+      if (player.isHuman()) {
+        classes.push("human");
+      }
+      teamDetailsDiv.appendChild(new DivBuilder().withClassList(classes).withTextContent(player.name).build());
+    }
+  }
+  return scoreboardDiv;
 }
 
 function drawPlayedTrickDiv(trick: Trick, players: Map<Position, Player>, trickCardDivs: Map<Position, HTMLDivElement>) {

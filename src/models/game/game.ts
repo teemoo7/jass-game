@@ -106,7 +106,7 @@ export class Game {
 
       round.playedTricks.push(round.currentTrick);
 
-      await delay();
+      await delay(1000);
 
       currentPlayer = winningPlayedCard!.player;
     }

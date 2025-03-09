@@ -48,8 +48,8 @@ export function botPlayCard(player: Player, round: Round): Promise<Card> {
   });
 }
 
-export function delay() {
-  return new Promise(resolve => setTimeout(resolve, 1000));
+export function delay(milliseconds: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
 export function drawNewGameSettings(): Promise<Game> {
@@ -73,8 +73,8 @@ export function drawNewGameSettings(): Promise<Game> {
     gameModeDiv.appendChild(new LabelBuilder().withTextContent("Game mode").build());
     const gameModeSelect = new SelectBuilder().withId("gameModeSelect").build();
     gameModeDiv.appendChild(gameModeSelect);
-    gameModeSelect.appendChild(new OptionBuilder().withValue(GameMode.NORMAL).withTextContent("Normal (1000 pts)").build());
-    gameModeSelect.appendChild(new OptionBuilder().withValue(GameMode.DOUBLED_SPADES).withTextContent("Doubled spades (1500 pts)").build());
+    gameModeSelect.appendChild(new OptionBuilder().withValue(GameMode.NORMAL).withId("gameModeOptionNormal").withTextContent("Normal (1000 pts)").build());
+    gameModeSelect.appendChild(new OptionBuilder().withValue(GameMode.DOUBLED_SPADES).withId("gameModeOptionDoubleSpades").withTextContent("Doubled spades (1500 pts)").build());
 
     const playerNameDiv = new DivBuilder().build();
     newGameSettingsDiv.appendChild(playerNameDiv);
@@ -91,20 +91,19 @@ export function drawNewGameSettings(): Promise<Game> {
     botsLevelDiv.appendChild(new LabelBuilder().withTextContent("Bots level").build());
     const botsLevelSelect = new SelectBuilder().withId("botsLevelSelect").build();
     botsLevelDiv.appendChild(botsLevelSelect);
-    botsLevelSelect.appendChild(new OptionBuilder().withValue("0").withTextContent("Stupid").build());
-    botsLevelSelect.appendChild(new OptionBuilder().withValue("1").withTextContent("Easy").build());
-    botsLevelSelect.appendChild(new OptionBuilder().withValue("2").withTextContent("Medium").build());
-    botsLevelSelect.appendChild(new OptionBuilder().withValue("3").withTextContent("Hard").withSelected(true).build());
+    botsLevelSelect.appendChild(new OptionBuilder().withValue("0").withId("botsLevelOptionStupid").withTextContent("Stupid").build());
+    botsLevelSelect.appendChild(new OptionBuilder().withValue("1").withId("botsLevelOptionEasy").withTextContent("Easy").build());
+    botsLevelSelect.appendChild(new OptionBuilder().withValue("2").withId("botsLevelOptionMedium").withTextContent("Medium").build());
+    botsLevelSelect.appendChild(new OptionBuilder().withValue("3").withId("botsLevelOptionHard").withTextContent("Hard").withSelected(true).build());
 
     const startButtonDiv = new DivBuilder().build();
     newGameSettingsDiv.appendChild(startButtonDiv);
 
-    const startButton = new ButtonBuilder().withTextContent("Start game").build();
+    const startButton = new ButtonBuilder().withTextContent("Start game").withId("startGameButton").build();
     startButtonDiv.appendChild(startButton);
 
     startButton.addEventListener("click", () => {
       const gameMode = (document.getElementById("gameModeSelect") as HTMLSelectElement).value as GameMode;
-      // const gameMode = (document.querySelector('input[name="gameMode"]:checked') as HTMLInputElement)!.value as GameMode;
       const playerName = (document.getElementById("playerNameInput") as HTMLInputElement).value;
       const playerHuman: Player = new Human(playerName);
       const botsLevel = parseInt((document.getElementById("botsLevelSelect") as HTMLSelectElement).value);
@@ -151,7 +150,7 @@ export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: bool
       if (trumpSuitRecommendation && trumpSuitRecommendation === suit) {
         classes.push("trump-decision-suit-recommended");
       }
-      const suitDiv = new DivBuilder().withClassList(classes).build();
+      const suitDiv = new DivBuilder().withId("suit" + suit).withClassList(classes).build();
       suitDiv.appendChild(makeCardImage(new Card(suit, Rank.ACE), true, false, true));
       trumpDecisionSuits.appendChild(suitDiv);
       suitDiv.addEventListener("click", () => {
@@ -170,7 +169,7 @@ export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: bool
       if (trumpSuitRecommendation === undefined) {
         classes.push("pass-button-recommended");
       }
-      const passButton = new DivBuilder().withClassList(classes).withTextContent("Pass to team mate").build();
+      const passButton = new DivBuilder().withId("passButton").withClassList(classes).withTextContent("Pass to team mate").build();
       passActionDiv.appendChild(passButton);
       passButton.addEventListener("click", () => {
         trumpDecisionDiv.remove();

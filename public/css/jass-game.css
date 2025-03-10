@@ -69,6 +69,27 @@ html, body {
     font-weight: bold;
 }
 
+#gameOver button {
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: auto;
+    display: block;
+    border: 1px solid #095f67;
+    box-shadow: #095f67 0 0 10px;
+    background-color: #095f67;
+    color: lightgray;
+    font-weight: bold;
+}
+
+#gameOver #scores {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
 #container {
     display: flex;
     width: 1280px;

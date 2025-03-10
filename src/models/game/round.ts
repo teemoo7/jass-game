@@ -295,6 +295,22 @@ export class Round {
     this.scores.set(team, score + this.scores.get(team)!);
   }
 
+  addMatchBonus() {
+    const bonusPoints: number = 100;
+    const team1 = this.teams[0];
+    const team2 = this.teams[1];
+    const playedTricks = this.playedTricks.length;
+    if (playedTricks == 0) {
+      return;
+    }
+    const tricksForTeam1 = this.playedTricks.filter(trick => team1.hasPlayer(trick.computeWinningPlayedCard()!.player));
+    if (tricksForTeam1.length == playedTricks) {
+      this.addScore(team1, bonusPoints);
+    } else if (tricksForTeam1.length == 0) {
+      this.addScore(team2, bonusPoints);
+    }
+  }
+
   getPlayedTrumpCards(): Card[] {
     return this.playedTricks
       .flatMap((trick) => trick.playedCards)

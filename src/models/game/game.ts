@@ -2,7 +2,14 @@ import { Team } from "../player/team";
 import { Player } from "../player/player.ts";
 import { Round } from "./round.ts";
 import { GameMode } from "./gamemode.ts";
-import { botPlayCard, delay, drawBoard, drawTrumpDecisionDiv, waitForHumanPlayer } from "../../ui/board.ts";
+import {
+  botPlayCard,
+  delay,
+  drawBoard,
+  drawGameOverDialog,
+  drawTrumpDecisionDiv,
+  waitForHumanPlayer
+} from "../../ui/board.ts";
 import { Meld } from "./meld.ts";
 import { Trick } from "./trick.ts";
 import { PlayedCard } from "./playedcard.ts";
@@ -39,13 +46,12 @@ export class Game {
       const round = new Round(this.rounds.length + 1, this.teams, this.gameMode, trumpDecider);
       this.rounds.push(round);
       await this.roundStart(round);
-      //todo: add bonus for winning all tricks
       this.addRoundScores(round);
       trumpDecider = this.getNextPlayer(round.trumpDecider);
     }
-    //todo: display winner in a dialog
     console.log(`Game over after ${this.rounds.length} rounds with final score: ${this.prettyPrintScores()}`);
     console.log(`Winning team: ${this.getWinner()?.name}`);
+    drawGameOverDialog(this);
   }
 
   async roundStart(round: Round) {
@@ -111,6 +117,8 @@ export class Game {
 
       currentPlayer = winningPlayedCard!.player;
     }
+    round.addMatchBonus();
+
     console.log(
       `Round ends with score: ${this.scores.get(this.teams[0])} - ${this.scores.get(this.teams[1])}`
     );

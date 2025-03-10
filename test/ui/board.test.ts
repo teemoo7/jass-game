@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   botPlayCard,
   delay,
-  drawBoard,
+  drawBoard, drawGameOverDialog,
   drawNewGameSettings,
   drawTrumpDecisionDiv,
   waitForHumanPlayer
@@ -195,8 +195,6 @@ describe("Board", () => {
       playerHands.set(bot2, [new Card(Suit.HEARTS, Rank.EIGHT), new Card(Suit.DIAMONDS, Rank.ACE)]);
       playerHands.set(bot3, [new Card(Suit.HEARTS, Rank.SIX), new Card(Suit.DIAMONDS, Rank.TEN)]);
 
-      const playedCard = new Card(Suit.DIAMONDS, Rank.JACK);
-
       const trick: Trick = {
         computeTrickScore: vi.fn(() => 2),
         computeWinningPlayedCard: vi.fn(() => undefined),
@@ -243,6 +241,32 @@ describe("Board", () => {
       expect(document.querySelector("#melds")).not.toBeNull();
       expect(document.querySelector("#playedTrumpCards")).not.toBeNull();
       expect(document.querySelector("#trickPointsValue")).not.toBeNull();
+    });
+  });
+
+  describe("Draw game over dialog", () => {
+    it("should draw the game over dialog", () => {
+      // given
+      const appDiv = document.createElement("div");
+      appDiv.id = "app";
+      document.body.appendChild(appDiv);
+      const player1: Player = new Human("Player 1");
+      const bot1 = new Bot("Bot1", 0);
+      const bot2 = new Bot("Bot2", 0);
+      const bot3 = new Bot("Bot3", 0);
+
+      const team1: Team = new Team(player1, bot1, "Team 1");
+      const team2: Team = new Team(bot2, bot3, "Team 2");
+
+      const game = new Game([team1, team2], GameMode.DOUBLED_SPADES);
+      game.scores.set(team1, 789);
+      game.scores.set(team2, 1526);
+
+      // when
+      drawGameOverDialog(game);
+
+      // then
+      expect(document.querySelector("#gameOver")).not.toBeNull();
     });
   });
 });

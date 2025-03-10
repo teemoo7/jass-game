@@ -190,6 +190,44 @@ export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: bool
   });
 }
 
+export function drawGameOverDialog(game: Game) {
+  const modal = new DivBuilder().withId("modal").build();
+  const app = document.getElementById("app")!;
+  app.appendChild(modal);
+
+  const dialog = new DivBuilder().withId("dialog").build();
+  app.appendChild(dialog);
+
+  const gameOverDiv = new DivBuilder().withId("gameOver").build();
+  dialog.appendChild(gameOverDiv);
+
+  gameOverDiv.appendChild(new DivBuilder().withClassList(["title"]).withTextContent("Game over").build());
+
+  const winningTeam = game.getWinner();
+  gameOverDiv.appendChild(new DivBuilder().withTextContent(`Winning team: ${winningTeam?.name}`).build());
+
+  const scoresDiv = new DivBuilder().withId("scores").build();
+  gameOverDiv.appendChild(scoresDiv);
+
+  for (const team of game.teams) {
+    const teamDiv = new DivBuilder().withClassList(["team"]).build();
+    scoresDiv.appendChild(teamDiv);
+
+    teamDiv.appendChild(new DivBuilder().withClassList(["team-name"]).withTextContent(team.name).build());
+
+    teamDiv.appendChild(new DivBuilder().withClassList(["team-points"]).withTextContent(game.scores.get(team)!.toString()).build());
+  }
+
+  const newGameButton = new ButtonBuilder().withTextContent("New game").withId("newGameButton").build();
+  gameOverDiv.appendChild(newGameButton);
+
+  newGameButton.addEventListener("click", () => {
+    dialog.remove();
+    modal.remove();
+    drawNewGameSettings().then(newGame => newGame.start());
+  });
+}
+
 export function drawBoard(game: Game) {
   const app = document.getElementById("app")!;
 

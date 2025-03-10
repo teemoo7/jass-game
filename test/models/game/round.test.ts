@@ -10,6 +10,7 @@ import { Trick } from "../../../src/models/game/trick.ts";
 import { PlayedCard } from "../../../src/models/game/playedcard.ts";
 import { Player } from "../../../src/models/player/player.ts";
 import { Card } from "../../../src/models/card/card.ts";
+import { Game } from "../../../src/models/game/game.ts";
 
 describe("Game Round", () => {
   describe("Constructor", () => {
@@ -630,6 +631,42 @@ describe("Game Round", () => {
       // then
       expect(round.scores.get(team1)).toBe(0);
       expect(round.scores.get(team2)).toBe(scoreToAdd);
+    });
+  });
+
+  describe("Add match bonus to score", () => {
+    it("should add the match bonus to the winning team", () => {
+      // given
+      const team1: Team = new Team(new Human("John"), new Bot("Jane", 0), "Team 1");
+      const team2: Team = new Team(new Human("Jack"), new Bot("Joe", 0), "Team 2");
+      const teams = [team1, team2];
+      const gameMode = GameMode.NORMAL;
+      const round: Round = new Round(1, teams, gameMode, undefined);
+      const trumpSuit: Suit = Suit.HEARTS;
+
+      const trick1 = new Trick(trumpSuit);
+      trick1.playedCards.push(new PlayedCard(new Card(trumpSuit, Rank.JACK), team1.player1));
+      trick1.playedCards.push(new PlayedCard(new Card(trumpSuit, Rank.QUEEN), team2.player1));
+      trick1.playedCards.push(new PlayedCard(new Card(trumpSuit, Rank.KING), team1.player2));
+      trick1.playedCards.push(new PlayedCard(new Card(trumpSuit, Rank.ACE), team2.player2));
+      round.playedTricks.push(trick1);
+
+      const trick2 = new Trick(trumpSuit);
+      trick2.playedCards.push(new PlayedCard(new Card(trumpSuit, Rank.SEVEN), team1.player1));
+      trick2.playedCards.push(new PlayedCard(new Card(trumpSuit, Rank.EIGHT), team2.player1));
+      trick2.playedCards.push(new PlayedCard(new Card(trumpSuit, Rank.NINE), team1.player2));
+      trick2.playedCards.push(new PlayedCard(new Card(trumpSuit, Rank.TEN), team2.player2));
+      round.playedTricks.push(trick2);
+
+      const team1Score = round.scores.get(team1)!;
+      const team2Score = round.scores.get(team2)!;
+
+      // when
+      round.addMatchBonus();
+
+      // then
+      expect(round.scores.get(team1)).toBe(team1Score + 100);
+      expect(round.scores.get(team2)).toBe(team2Score);
     });
   });
 

@@ -48,5 +48,12 @@ Note that some rules might not have been implemented yet.
 * The cards images are from the [American Contract Bridge League resource center](https://acbl.mybigcommerce.com/52-playing-cards/).
 * The green baize background image is from [rawpixel.com on FreePik](https://www.freepik.com/free-photo/dark-green-wall_4246302.htm).
 
+## If I had more time
 
+I would...
 
+* Refactor for a cleaner code architecture.
+* Improve code encapsulation and modularity.
+* Add more tests (including UI tests).
+* Implement more rules (e.g. "Marriage" meld)
+* Implement more/better AI strategies.

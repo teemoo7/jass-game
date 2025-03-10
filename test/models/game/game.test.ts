@@ -10,7 +10,7 @@ import { Meld, MeldType } from "../../../src/models/game/meld.ts";
 import { Rank } from "../../../src/models/card/rank.ts";
 import { Suit } from "../../../src/models/card/suit.ts";
 import { Card } from "../../../src/models/card/card.ts";
-import { botPlayCard, drawBoard, waitForHumanPlayer } from "../../../src/ui/board.ts";
+import { botPlayCard, drawBoard, drawGameOverDialog, waitForHumanPlayer } from "../../../src/ui/board.ts";
 import { Trick } from "../../../src/models/game/trick.ts";
 import { PlayedCard } from "../../../src/models/game/playedcard.ts";
 
@@ -18,6 +18,7 @@ vi.mock('../../../src/ui/board.ts', () => ({
   botPlayCard: vi.fn(() => Promise.resolve(new Card(Suit.CLUBS, Rank.SIX))),
   delay: vi.fn(() => Promise.resolve()),
   drawBoard: vi.fn(),
+  drawGameOverDialog: vi.fn(),
   drawTrumpDecisionDiv: vi.fn(() => Promise.resolve(Suit.CLUBS)),
   waitForHumanPlayer: vi.fn(() => Promise.resolve(new Card(Suit.CLUBS, Rank.SIX))),
 }));

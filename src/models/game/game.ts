@@ -43,6 +43,7 @@ export class Game {
       this.addRoundScores(round);
       trumpDecider = this.getNextPlayer(round.trumpDecider);
     }
+    //todo: display winner in a dialog
     console.log(`Game over after ${this.rounds.length} rounds with final score: ${this.prettyPrintScores()}`);
     console.log(`Winning team: ${this.getWinner()?.name}`);
   }

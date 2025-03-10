@@ -165,7 +165,7 @@ export class Round {
     const nonTrumpCards = allowedCards.filter((card) => card.suit !== trumpSuit);
     const trumpCards = allowedCards.filter((card) => card.suit === trumpSuit);
 
-    const level: number = currentPlayer.isHuman() ? 0 : (currentPlayer as Bot).level;
+    const level: number = currentPlayer.isHuman() ? Bot.LEVEL_HARD : (currentPlayer as Bot).level;
     const teamMate = this.getTeamMate(currentPlayer);
     const isLastToPlay: boolean = currentTrick.playedCards.length === 3;
     const isFirstToPlay: boolean = currentTrick.playedCards.length === 0;
@@ -173,7 +173,7 @@ export class Round {
     const suitToFollow: Suit | undefined = currentTrick.playedCards[0]?.card.suit;
     const trickScore: number = currentTrick.computeTrickScore();
 
-    if (isLastToPlay && currentTrickWinner === teamMate && level >= 1) {
+    if (isLastToPlay && currentTrickWinner === teamMate && level >= Bot.LEVEL_EASY) {
       // If you are the last to play and your partner is winning the trick, play the card with the highest value, but preferably a ten rather than an ace
       if (nonTrumpCards.length > 0) {
         const tenCard = nonTrumpCards.find((card) => card.rank === Rank.TEN);
@@ -196,7 +196,7 @@ export class Round {
       }
     }
 
-    if (isLastToPlay && currentTrickWinner !== teamMate && level >= 2) {
+    if (isLastToPlay && currentTrickWinner !== teamMate && level >= Bot.LEVEL_MEDIUM) {
       // If you are the last to play and your partner is losing the trick, and you have a better card to win the trick, play it, otherwise play the card with the lowest value
       const winningCard = currentTrick.computeWinningPlayedCard()?.card;
 
@@ -213,7 +213,7 @@ export class Round {
       }
     }
 
-    if (!isFirstToPlay && currentTrickWinner !== teamMate && level >= 2) {
+    if (!isFirstToPlay && currentTrickWinner !== teamMate && level >= Bot.LEVEL_MEDIUM) {
       // If there is a high value in the current trick, and you are not sure that your partner will win it, and you have a trump card, play it
       if (trickScore >= 10 && trumpCards.length > 0) {
         console.log("AI: If there is a high value in the current trick, and you are not sure that your partner will win it, and you have a trump card, play it");
@@ -223,9 +223,10 @@ export class Round {
       }
     }
 
-    if (isFirstToPlay && nonTrumpCards.length > 0 && level >= 1) {
+    if (isFirstToPlay && nonTrumpCards.length > 0 && level >= Bot.LEVEL_EASY) {
       // If you are the first to play, and you have a card that is winning over all remaining cards in all hands, play it, unless it's in trump suit
-      SuitHelper.getSuits().filter((suit) => suit !== this.trumpSuit).forEach((suit) => {
+      for (const suit of SuitHelper.getSuits().filter((suit) => suit !== this.trumpSuit)) {
+      // SuitHelper.getSuits().filter((suit) => suit !== this.trumpSuit).forEach((suit) => {
         const suitCards = nonTrumpCards.filter((card) => card.suit === suit);
         if (suitCards.length > 0) {
           const maxPowerCardInSuit = suitCards.reduce((max, card) => {
@@ -237,11 +238,11 @@ export class Round {
             return maxPowerCardInSuit;
           }
         }
-      });
+      }
     }
 
     // If you are the first to play, and you have chosen the trump suit, play the most powerful card in that suit, unless you know that the other team has no more trump cards
-    if (isFirstToPlay && this.trumpDecider === currentPlayer && trumpCards.length > 0 && level >= 3) {
+    if (isFirstToPlay && this.trumpDecider === currentPlayer && trumpCards.length > 0 && level >= Bot.LEVEL_HARD) {
       const maxPowerInTrump = trumpCards.reduce((max, card) => {
         return CardHelper.computeCardPower(card, true) > CardHelper.computeCardPower(max, true) ? card : max;
       });
@@ -257,6 +258,11 @@ export class Round {
      */
 
 
+    if (nonTrumpCards.length > 0 && level >= Bot.LEVEL_EASY) {
+      // If you don't know, play a random non-trump card
+      console.log("AI: Playing a non-trump random card");
+      return Utils.getRandomElement(nonTrumpCards);
+    }
     // If you don't know, play a random card
     console.log("AI: Playing a random card");
     return Utils.getRandomElement(allowedCards);
@@ -264,15 +270,25 @@ export class Round {
 
   playerMightStillHaveSuit(player: Player, suit: Suit): boolean {
     // Try to determine if the player has not played a card of the suit in the played tricks when they should have if they had some
-    this.playedTricks.forEach((trick) => {
+    let result = true;
+
+    let allTricks: Trick[];
+    if (this.currentTrick && this.currentTrick.playedCards.length > 0) {
+      allTricks = this.playedTricks.concat([this.currentTrick]);
+    } else {
+      allTricks = this.playedTricks;
+    }
+
+    allTricks.forEach((trick) => {
       const firstPlayedCard = trick.playedCards[0];
       if (firstPlayedCard!.card.suit === suit && firstPlayedCard!.player !== player) {
-        if (trick.playedCards.some((playedCard) => playedCard.player === player && playedCard.card.suit !== suit && (playedCard.card.suit !== this.trumpSuit || suit === this.trumpSuit))) {
-          return false;
+        if (trick.playedCards.some((playedCard) =>
+          playedCard.player === player && playedCard.card.suit !== suit && playedCard.card.suit !== this.trumpSuit)) {
+          result = false;
         }
       }
     });
-    return true;
+    return result;
   }
 
   addScore(team: Team, score: number): void {

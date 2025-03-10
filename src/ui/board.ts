@@ -91,10 +91,10 @@ export function drawNewGameSettings(): Promise<Game> {
     botsLevelDiv.appendChild(new LabelBuilder().withTextContent("Bots level").build());
     const botsLevelSelect = new SelectBuilder().withId("botsLevelSelect").build();
     botsLevelDiv.appendChild(botsLevelSelect);
-    botsLevelSelect.appendChild(new OptionBuilder().withValue("0").withId("botsLevelOptionStupid").withTextContent("Stupid").build());
-    botsLevelSelect.appendChild(new OptionBuilder().withValue("1").withId("botsLevelOptionEasy").withTextContent("Easy").build());
-    botsLevelSelect.appendChild(new OptionBuilder().withValue("2").withId("botsLevelOptionMedium").withTextContent("Medium").build());
-    botsLevelSelect.appendChild(new OptionBuilder().withValue("3").withId("botsLevelOptionHard").withTextContent("Hard").withSelected(true).build());
+    botsLevelSelect.appendChild(new OptionBuilder().withValue(Bot.LEVEL_STUPID.toString()).withId("botsLevelOptionStupid").withTextContent("Stupid").build());
+    botsLevelSelect.appendChild(new OptionBuilder().withValue(Bot.LEVEL_EASY.toString()).withId("botsLevelOptionEasy").withTextContent("Easy").build());
+    botsLevelSelect.appendChild(new OptionBuilder().withValue(Bot.LEVEL_MEDIUM.toString()).withId("botsLevelOptionMedium").withTextContent("Medium").build());
+    botsLevelSelect.appendChild(new OptionBuilder().withValue(Bot.LEVEL_HARD.toString()).withId("botsLevelOptionHard").withTextContent("Hard").withSelected(true).build());
 
     const startButtonDiv = new DivBuilder().build();
     newGameSettingsDiv.appendChild(startButtonDiv);

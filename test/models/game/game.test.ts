@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Game } from "../../../src/models/game/game.ts";
 import { GameMode } from "../../../src/models/game/gamemode.ts";
 import { Team } from "../../../src/models/player/team.ts";
@@ -9,6 +9,16 @@ import { Player } from "../../../src/models/player/player.ts";
 import { Meld, MeldType } from "../../../src/models/game/meld.ts";
 import { Rank } from "../../../src/models/card/rank.ts";
 import { Suit } from "../../../src/models/card/suit.ts";
+import { Card } from "../../../src/models/card/card.ts";
+import { botPlayCard, drawBoard, waitForHumanPlayer } from "../../../src/ui/board.ts";
+
+vi.mock('../../../src/ui/board.ts', () => ({
+  botPlayCard: vi.fn(() => Promise.resolve(new Card(Suit.CLUBS, Rank.SIX))),
+  delay: vi.fn(() => Promise.resolve()),
+  drawBoard: vi.fn(),
+  drawTrumpDecisionDiv: vi.fn(() => Promise.resolve(Suit.CLUBS)),
+  waitForHumanPlayer: vi.fn(() => Promise.resolve(new Card(Suit.CLUBS, Rank.SIX))),
+}));
 
 describe("Game", () => {
   describe("constructor", () => {
@@ -314,21 +324,49 @@ describe("Game", () => {
       expect(prettyPrintedScores).toBe("Team 1: 100, Team 2: 57");
     });
   });
-  //
-  // describe("Start round", () => {
-  //   it("should start a new round", () => {
-  //     // given
-  //     const team1: Team = new Team(new Bot("John", 0), new Bot("Jane", 0), "Team 1");
-  //     const team2: Team = new Team(new Bot("Jack", 0), new Bot("Joe", 0), "Team 2");
-  //     const teams = [team1, team2];
-  //     const gameMode = GameMode.NORMAL;
-  //     const game = new Game(teams, gameMode);
-  //
-  //     // when
-  //     game.start();
-  //
-  //     // then
-  //     //todo: introduce no delay for testing
-  //   });
-  // });
+
+  describe("Start game", () => {
+    it("should start a new game until target score has been reached by the winning team", async () => {
+      // given
+      const team1: Team = new Team(new Bot("John", 0), new Bot("Jane", 0), "Team 1");
+      const team2: Team = new Team(new Bot("Jack", 0), new Bot("Joe", 0), "Team 2");
+      const teams = [team1, team2];
+      const gameMode = GameMode.NORMAL;
+      const game = new Game(teams, gameMode);
+      game.scores.set(team1, 1000);
+      game.scores.set(team2, 999);
+
+      // when
+      await game.start();
+
+      // then
+      expect(game.isGameOver()).toBe(true);
+      expect(game.getWinner()).toBe(team1);
+    });
+
+    it("should start a new game and play rounds until it's over", async () => {
+      // given
+      const team1: Team = new Team(new Bot("John", 0), new Bot("Jane", 0), "Team 1");
+      const team2: Team = new Team(new Bot("Jack", 0), new Bot("Joe", 0), "Team 2");
+      const teams = [team1, team2];
+      const gameMode = GameMode.NORMAL;
+      const game = new Game(teams, gameMode);
+      game.scores.set(team1, 999);
+      game.scores.set(team2, 999);
+
+      // when
+      await game.start();
+
+      // then
+      expect(game.isGameOver()).toBe(true);
+      expect(drawBoard).toHaveBeenCalled();
+      expect(waitForHumanPlayer).not.toHaveBeenCalled();
+      expect(botPlayCard).toHaveBeenCalled();
+      expect(game.rounds.length).toBeGreaterThan(0);
+      game.rounds.forEach((round) => {
+        expect(round.trumpSuit).toBeDefined();
+        expect(round.playedTricks.length).toBe(9);
+      });
+    });
+  });
 });

@@ -11,6 +11,16 @@ import { GameMode } from "../models/game/gamemode.ts";
 import { Team } from "../models/player/team.ts";
 import { Human } from "../models/player/human.ts";
 import { Bot } from "../models/player/bot.ts";
+import {
+  ButtonBuilder,
+  DivBuilder,
+  ImgBuilder,
+  InputBuilder,
+  LabelBuilder,
+  OptionBuilder,
+  SelectBuilder,
+  SpanBuilder
+} from "./builders.ts";
 
 export function waitForHumanPlayer(hand: Card[]): Promise<Card> {
   return new Promise(resolve => {
@@ -38,123 +48,62 @@ export function botPlayCard(player: Player, round: Round): Promise<Card> {
   });
 }
 
-export function delay() {
-  return new Promise(resolve => setTimeout(resolve, 1000));
+export function delay(milliseconds: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
-
-//todo: create builder for document elements
 
 export function drawNewGameSettings(): Promise<Game> {
   return new Promise(resolve => {
-    const newGameSettingsDiv = document.createElement("div");
-    newGameSettingsDiv.id = "newGameSettings";
 
-    const modal = document.createElement("div");
-    modal.id = "modal";
     const app = document.getElementById("app")!;
+
+    const modal = new DivBuilder().withId("modal").build();
     app.appendChild(modal);
 
-    const dialog = document.createElement("div");
-    dialog.id = "dialog";
+    const dialog = new DivBuilder().withId("dialog").build();
     app.appendChild(dialog);
 
+    const newGameSettingsDiv = new DivBuilder().withId("newGameSettings").build();
     dialog.appendChild(newGameSettingsDiv);
 
-    const title = document.createElement("div");
-    title.classList.add("title");
-    title.textContent = "New Game";
-    newGameSettingsDiv.appendChild(title);
+    newGameSettingsDiv.appendChild(new DivBuilder().withClassList(["title"]).withTextContent("New Game").build());
 
-    const gameModeDiv = document.createElement("div");
+    const gameModeDiv = new DivBuilder().build();
     newGameSettingsDiv.appendChild(gameModeDiv);
-
-    const gameModeLabel = document.createElement("label");
-    gameModeLabel.textContent = "Game mode";
-    gameModeDiv.appendChild(gameModeLabel);
-
-    const gameModeSelect = document.createElement("select");
-    gameModeSelect.id = "gameModeSelect";
+    gameModeDiv.appendChild(new LabelBuilder().withTextContent("Game mode").build());
+    const gameModeSelect = new SelectBuilder().withId("gameModeSelect").build();
     gameModeDiv.appendChild(gameModeSelect);
+    gameModeSelect.appendChild(new OptionBuilder().withValue(GameMode.NORMAL).withId("gameModeOptionNormal").withTextContent("Normal (1000 pts)").build());
+    gameModeSelect.appendChild(new OptionBuilder().withValue(GameMode.DOUBLED_SPADES).withId("gameModeOptionDoubleSpades").withTextContent("Doubled spades (1500 pts)").build());
 
-    const gameModeNormalOption = document.createElement("option");
-    gameModeNormalOption.value = GameMode.NORMAL;
-    gameModeNormalOption.textContent = "Normal (1000 pts)";
-    gameModeSelect.appendChild(gameModeNormalOption);
-
-    const gameModeDoubledSpadesOption = document.createElement("option");
-    gameModeDoubledSpadesOption.value = GameMode.DOUBLED_SPADES;
-    gameModeDoubledSpadesOption.textContent = "Doubled spades (1500 pts)";
-    gameModeSelect.appendChild(gameModeDoubledSpadesOption);
-
-    const playerNameDiv = document.createElement("div");
+    const playerNameDiv = new DivBuilder().build();
     newGameSettingsDiv.appendChild(playerNameDiv);
+    playerNameDiv.appendChild(new LabelBuilder().withTextContent("Player name").build());
+    playerNameDiv.appendChild(new InputBuilder().withType("text").withId("playerNameInput").withValue("Me").build());
 
-    const playerNameLabel = document.createElement("label");
-    playerNameLabel.textContent = "Player name";
-    playerNameDiv.appendChild(playerNameLabel);
-
-    const playerNameInput = document.createElement("input");
-    playerNameInput.type = "text";
-    playerNameInput.id = "playerNameInput";
-    playerNameInput.value = "Me";
-    playerNameDiv.appendChild(playerNameInput);
-
-    const teamNameDiv = document.createElement("div");
-    teamNameDiv.id = "teamName";
+    const teamNameDiv = new DivBuilder().withId("teamName").build();
     newGameSettingsDiv.appendChild(teamNameDiv);
+    teamNameDiv.appendChild(new LabelBuilder().withTextContent("Team name").build());
+    teamNameDiv.appendChild(new InputBuilder().withType("text").withId("teamNameInput").withValue("The best team").build());
 
-    const teamNameLabel = document.createElement("label");
-    teamNameLabel.textContent = "Team name";
-    teamNameDiv.appendChild(teamNameLabel);
-
-    const teamNameInput = document.createElement("input");
-    teamNameInput.type = "text";
-    teamNameInput.id = "teamNameInput";
-    teamNameInput.value = "The best team";
-    teamNameDiv.appendChild(teamNameInput);
-
-    const botsLevelDiv = document.createElement("div");
+    const botsLevelDiv = new DivBuilder().build();
     newGameSettingsDiv.appendChild(botsLevelDiv);
-
-    const botsLevelLabel = document.createElement("label");
-    botsLevelLabel.textContent = "Bots level";
-    botsLevelDiv.appendChild(botsLevelLabel);
-
-    const botsLevelSelect = document.createElement("select");
-    botsLevelSelect.id = "botsLevelSelect";
+    botsLevelDiv.appendChild(new LabelBuilder().withTextContent("Bots level").build());
+    const botsLevelSelect = new SelectBuilder().withId("botsLevelSelect").build();
     botsLevelDiv.appendChild(botsLevelSelect);
+    botsLevelSelect.appendChild(new OptionBuilder().withValue(Bot.LEVEL_STUPID.toString()).withId("botsLevelOptionStupid").withTextContent("Stupid").build());
+    botsLevelSelect.appendChild(new OptionBuilder().withValue(Bot.LEVEL_EASY.toString()).withId("botsLevelOptionEasy").withTextContent("Easy").build());
+    botsLevelSelect.appendChild(new OptionBuilder().withValue(Bot.LEVEL_MEDIUM.toString()).withId("botsLevelOptionMedium").withTextContent("Medium").build());
+    botsLevelSelect.appendChild(new OptionBuilder().withValue(Bot.LEVEL_HARD.toString()).withId("botsLevelOptionHard").withTextContent("Hard").withSelected(true).build());
 
-    const botsLevelStupidOption = document.createElement("option");
-    botsLevelStupidOption.value = "0";
-    botsLevelStupidOption.textContent = "Stupid";
-    botsLevelSelect.appendChild(botsLevelStupidOption);
-
-    const botsLevelEasyOption = document.createElement("option");
-    botsLevelEasyOption.value = "1";
-    botsLevelEasyOption.textContent = "Easy";
-    botsLevelSelect.appendChild(botsLevelEasyOption);
-
-    const botsLevelMediumOption = document.createElement("option");
-    botsLevelMediumOption.value = "2";
-    botsLevelMediumOption.textContent = "Medium";
-    botsLevelSelect.appendChild(botsLevelMediumOption);
-
-    const botsLevelHardOption = document.createElement("option");
-    botsLevelHardOption.value = "3";
-    botsLevelHardOption.textContent = "Hard";
-    botsLevelHardOption.selected = true;
-    botsLevelSelect.appendChild(botsLevelHardOption);
-
-    const startButtonDiv = document.createElement("div");
+    const startButtonDiv = new DivBuilder().build();
     newGameSettingsDiv.appendChild(startButtonDiv);
 
-    const startButton = document.createElement("button");
-    startButton.textContent = "Start game";
+    const startButton = new ButtonBuilder().withTextContent("Start game").withId("startGameButton").build();
     startButtonDiv.appendChild(startButton);
 
     startButton.addEventListener("click", () => {
       const gameMode = (document.getElementById("gameModeSelect") as HTMLSelectElement).value as GameMode;
-      // const gameMode = (document.querySelector('input[name="gameMode"]:checked') as HTMLInputElement)!.value as GameMode;
       const playerName = (document.getElementById("playerNameInput") as HTMLInputElement).value;
       const playerHuman: Player = new Human(playerName);
       const botsLevel = parseInt((document.getElementById("botsLevelSelect") as HTMLSelectElement).value);
@@ -178,41 +127,30 @@ export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: bool
   return new Promise(resolve => {
     const hand: Card[] = round.playerHands.get(player)!;
 
-    const trumpDecisionDiv = document.createElement("div");
-    trumpDecisionDiv.id = "trumpDecision";
-
-    const modal = document.createElement("div");
-    modal.id = "modal";
+    const modal = new DivBuilder().withId("modal").build();
     const app = document.getElementById("app")!;
     app.appendChild(modal);
 
-    const dialog = document.createElement("div");
-    dialog.id = "dialog";
+    const dialog = new DivBuilder().withId("dialog").build();
     app.appendChild(dialog);
 
+    const trumpDecisionDiv = new DivBuilder().withId("trumpDecision").build();
     dialog.appendChild(trumpDecisionDiv);
 
-    const trumpDecisionTitle = document.createElement("div");
-    trumpDecisionTitle.classList.add("title");
-    trumpDecisionTitle.textContent = "Select trump suit";
-    trumpDecisionDiv.appendChild(trumpDecisionTitle);
+    trumpDecisionDiv.appendChild(new DivBuilder().withClassList(["title"]).withTextContent("Select trump suit").build());
 
-    const trumpDecisionInfo = document.createElement("div");
-    trumpDecisionInfo.classList.add("lead", "trump-decision-info");
-    trumpDecisionInfo.textContent = "Click on a suit below:";
-    trumpDecisionDiv.appendChild(trumpDecisionInfo);
+    trumpDecisionDiv.appendChild(new DivBuilder().withClassList(["lead", "trump-decision-info"]).withTextContent("Click on a suit below:").build());
 
     const trumpSuitRecommendation = round.computeBestTrumpSuit(hand, canPass);
 
-    const trumpDecisionSuits = document.createElement("div");
-    trumpDecisionSuits.classList.add("trump-decision-suits");
+    const trumpDecisionSuits = new DivBuilder().withClassList(["trump-decision-suits"]).build();
     trumpDecisionDiv.appendChild(trumpDecisionSuits);
     SuitHelper.getSuits().forEach(suit => {
-      const suitDiv = document.createElement("div");
-      suitDiv.classList.add("trump-decision-suit");
+      let classes = ["trump-decision-suit"];
       if (trumpSuitRecommendation && trumpSuitRecommendation === suit) {
-        suitDiv.classList.add("trump-decision-suit-recommended");
+        classes.push("trump-decision-suit-recommended");
       }
+      const suitDiv = new DivBuilder().withId("suit" + suit).withClassList(classes).build();
       suitDiv.appendChild(makeCardImage(new Card(suit, Rank.ACE), true, false, true));
       trumpDecisionSuits.appendChild(suitDiv);
       suitDiv.addEventListener("click", () => {
@@ -224,16 +162,14 @@ export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: bool
     });
 
     if (canPass) {
-      const passActionDiv = document.createElement("div");
-      passActionDiv.classList.add("trump-decision-pass");
+      const passActionDiv = new DivBuilder().withClassList(["trump-decision-pass"]).build();
       trumpDecisionDiv.appendChild(passActionDiv);
 
-      const passButton = document.createElement("div");
-      passButton.classList.add("pass-button");
+      let classes = ["pass-button"];
       if (trumpSuitRecommendation === undefined) {
-        passButton.classList.add("pass-button-recommended");
+        classes.push("pass-button-recommended");
       }
-      passButton.textContent = "Pass to team mate";
+      const passButton = new DivBuilder().withId("passButton").withClassList(classes).withTextContent("Pass to team mate").build();
       passActionDiv.appendChild(passButton);
       passButton.addEventListener("click", () => {
         trumpDecisionDiv.remove();
@@ -244,22 +180,53 @@ export function drawTrumpDecisionDiv(round: Round, player: Player, canPass: bool
       });
     }
 
-    const trumpDecisionHandTitle = document.createElement("div");
-    trumpDecisionHandTitle.classList.add("lead", "trump-decision-info");
-    trumpDecisionHandTitle.textContent = "Your hand:";
-    trumpDecisionDiv.appendChild(trumpDecisionHandTitle);
+    trumpDecisionDiv.appendChild(new DivBuilder().withClassList(["lead", "trump-decision-info"]).withTextContent("Your hand:").build());
 
-    const trumpDecisionHand = document.createElement("div");
-    trumpDecisionHand.classList.add("trump-decision-hand");
+    const trumpDecisionHand = new DivBuilder().withClassList(["trump-decision-hand"]).build();
     trumpDecisionDiv.appendChild(trumpDecisionHand);
-
     for (const card of hand) {
       trumpDecisionHand.appendChild(makeCardImage(card, true, false, true));
     }
-
   });
 }
 
+export function drawGameOverDialog(game: Game) {
+  const modal = new DivBuilder().withId("modal").build();
+  const app = document.getElementById("app")!;
+  app.appendChild(modal);
+
+  const dialog = new DivBuilder().withId("dialog").build();
+  app.appendChild(dialog);
+
+  const gameOverDiv = new DivBuilder().withId("gameOver").build();
+  dialog.appendChild(gameOverDiv);
+
+  gameOverDiv.appendChild(new DivBuilder().withClassList(["title"]).withTextContent("Game over").build());
+
+  const winningTeam = game.getWinner();
+  gameOverDiv.appendChild(new DivBuilder().withTextContent(`Winning team: ${winningTeam?.name}`).build());
+
+  const scoresDiv = new DivBuilder().withId("scores").build();
+  gameOverDiv.appendChild(scoresDiv);
+
+  for (const team of game.teams) {
+    const teamDiv = new DivBuilder().withClassList(["team"]).build();
+    scoresDiv.appendChild(teamDiv);
+
+    teamDiv.appendChild(new DivBuilder().withClassList(["team-name"]).withTextContent(team.name).build());
+
+    teamDiv.appendChild(new DivBuilder().withClassList(["team-points"]).withTextContent(game.scores.get(team)!.toString()).build());
+  }
+
+  const newGameButton = new ButtonBuilder().withTextContent("New game").withId("newGameButton").build();
+  gameOverDiv.appendChild(newGameButton);
+
+  newGameButton.addEventListener("click", () => {
+    dialog.remove();
+    modal.remove();
+    drawNewGameSettings().then(newGame => newGame.start());
+  });
+}
 
 export function drawBoard(game: Game) {
   const app = document.getElementById("app")!;
@@ -269,153 +236,83 @@ export function drawBoard(game: Game) {
   }
 
   const round: Round | undefined = game.rounds[game.rounds.length - 1];
-  const trick : Trick | undefined = round ? round.currentTrick : undefined;
+  const trick: Trick | undefined = round ? round.currentTrick : undefined;
 
   const players: Map<Position, Player> = new Map([
-    [Position.BOTTOM,  game.teams[0].player1],
+    [Position.BOTTOM, game.teams[0].player1],
     [Position.RIGHT, game.teams[1].player1],
     [Position.TOP, game.teams[0].player2],
     [Position.LEFT, game.teams[1].player2]
   ]);
 
-  const container = document.createElement("div");
-  container.id = "container";
+  const container = new DivBuilder().withId("container").build();
   app.appendChild(container);
 
-  const baize = document.createElement("div");
-  baize.id = "baize";
+  const baize = new DivBuilder().withId("baize").build();
   container.appendChild(baize);
 
   /* Players areas */
   const playerAreas: Map<Position, HTMLDivElement> = new Map();
   PositionHelper.getPositions().forEach(position => {
-    const playerArea = document.createElement("div");
-    playerArea.classList.add("area", position + "-area");
+    const playerArea = new DivBuilder().withClassList(["area", position + "-area"]).build();
     baize.appendChild(playerArea);
     playerAreas.set(position, playerArea);
   });
 
   /* Players names */
   PositionHelper.getPositions().forEach(position => {
-    const playerName = document.createElement("div");
-    playerName.classList.add("player-name", position + "-player-name");
-    playerName.textContent = players.get(position)!.name;
-    baize.appendChild(playerName);
+    baize.appendChild(new DivBuilder().withClassList(["player-name", position + "-player-name"]).withTextContent(players.get(position)!.name).build());
   });
 
   /* Trick cards */
   const trickCardDivs: Map<Position, HTMLDivElement> = new Map();
   PositionHelper.getPositions().forEach(position => {
-    const trickCard = document.createElement("div");
-    trickCard.classList.add("trick-card", position + "-trick-card");
+    const trickCard = new DivBuilder().withClassList(["trick-card", position + "-trick-card"]).build();
     baize.appendChild(trickCard);
     trickCardDivs.set(position, trickCard);
   });
 
   /* Scoreboard */
 
-  const scoreboardDiv = document.createElement("div");
-  scoreboardDiv.id = "scoreboard";
+  const scoreboardDiv = makeScoreboard(game, players);
   container.appendChild(scoreboardDiv);
-  const scoreboardTitle = document.createElement("div");
-  scoreboardTitle.classList.add("title");
-  scoreboardTitle.textContent = "Scoreboard";
-  scoreboardDiv.appendChild(scoreboardTitle);
-
-  const teamsDiv = document.createElement("div");
-  teamsDiv.id = "teams";
-  scoreboardDiv.appendChild(teamsDiv);
-
-  for (const team of game.teams) {
-    const teamScoreDiv = document.createElement("div");
-    teamScoreDiv.classList.add("team-score");
-    teamsDiv.appendChild(teamScoreDiv);
-
-    const teamPointsDiv = document.createElement("div");
-    teamPointsDiv.classList.add("team-points");
-    teamPointsDiv.textContent = game.scores.get(team)!.toString();
-    teamScoreDiv.appendChild(teamPointsDiv);
-
-    const teamDetailsDiv = document.createElement("div");
-    teamDetailsDiv.classList.add("team-details");
-    teamScoreDiv.appendChild(teamDetailsDiv);
-
-    const teamDiv = document.createElement("div");
-    teamDiv.classList.add("team");
-    teamDiv.textContent = team.name;
-    teamDetailsDiv.appendChild(teamDiv);
-
-    for (const player of team.getPlayers()) {
-      const playerDiv = document.createElement("div");
-      playerDiv.classList.add("player");
-      playerDiv.textContent = player.name;
-      if (player.isHuman()) {
-        playerDiv.classList.add("human");
-      }
-      teamDetailsDiv.appendChild(playerDiv);
-    }
-  }
 
   if (round) {
 
     /* Round scoreboard */
 
-    const roundDiv = document.createElement("div");
-    roundDiv.id = "round";
+    const roundDiv = new DivBuilder().withId("round").build();
     scoreboardDiv.appendChild(roundDiv);
 
-    const roundTitle = document.createElement("div");
-    roundTitle.classList.add("title");
-    roundTitle.textContent = `Round ${round.number}`;
-    roundDiv.appendChild(roundTitle);
+    roundDiv.appendChild(new DivBuilder().withClassList(["title"]).withTextContent(`Round ${round.number}`).build());
 
-    const trumpDiv = document.createElement("div");
-    trumpDiv.id = "trump";
+    const trumpDiv = new DivBuilder().withId("trump").build();
     roundDiv.appendChild(trumpDiv);
 
     if (round.trumpSuit) {
-      const trumpSuitImage = document.createElement("img");
-      trumpSuitImage.classList.add("trump-suit-image");
-      trumpSuitImage.src = `${import.meta.env.BASE_URL}images/${RankHelper.getRankFromAbbreviation(Rank.ACE)}${SuitHelper.getSuitAbbreviation(round.trumpSuit!)}.png`;
-      trumpDiv.appendChild(trumpSuitImage);
+      trumpDiv.appendChild(new ImgBuilder().withSrc(`${import.meta.env.BASE_URL}images/${RankHelper.getRankFromAbbreviation(Rank.ACE)}${SuitHelper.getSuitAbbreviation(round.trumpSuit!)}.png`).withClassList(["trump-suit-image"]).build());
 
-      const trumpDetailsDiv = document.createElement("div");
-      trumpDetailsDiv.id = "trumpDetails";
+      const trumpDetailsDiv = new DivBuilder().withId("trumpDetails").build();
       trumpDiv.appendChild(trumpDetailsDiv);
 
-      const trumpTitle = document.createElement("div");
-      trumpTitle.classList.add("subtitle");
-      trumpTitle.textContent = "Trump";
-      trumpDetailsDiv.appendChild(trumpTitle);
+      trumpDetailsDiv.appendChild(new DivBuilder().withClassList(["subtitle"]).withTextContent("Trump").build());
 
-      const trumpSuit = document.createElement("div");
-      trumpSuit.classList.add("trump-suit-value");
-      trumpSuit.textContent = `${round.trumpSuit}`;
-      trumpDetailsDiv.appendChild(trumpSuit);
+      trumpDetailsDiv.appendChild(new DivBuilder().withClassList(["trump-suit-value"]).withTextContent(round.trumpSuit).build());
 
-      const trumpDeciderDiv = document.createElement("div");
-      trumpDeciderDiv.classList.add("trump-decider");
-      trumpDeciderDiv.textContent = `Decided by `;
+      const trumpDeciderDiv = new DivBuilder().withClassList(["trump-decider"]).withTextContent("Decided by ").build();
       trumpDetailsDiv.appendChild(trumpDeciderDiv);
 
-      const trumpDeciderPlayerSpan = document.createElement("span");
-      trumpDeciderPlayerSpan.classList.add("trump-decider-player");
-      trumpDeciderPlayerSpan.textContent = `${round.trumpDecider.name}`;
-      trumpDeciderDiv.appendChild(trumpDeciderPlayerSpan);
+      trumpDeciderDiv.appendChild(new SpanBuilder().withClassList(["trump-decider-player"]).withTextContent(round.trumpDecider.name).build());
     }
 
     /* Melds */
-    const meldsDiv = document.createElement("div");
-    meldsDiv.id = "melds";
+    const meldsDiv = new DivBuilder().withId("melds").build();
     roundDiv.appendChild(meldsDiv);
 
-    const meldsTitle = document.createElement("div");
-    meldsTitle.classList.add("subtitle");
-    meldsTitle.textContent = "Melds";
+    const meldsTitle = new DivBuilder().withClassList(["subtitle"]).withTextContent("Melds").build();
     meldsDiv.appendChild(meldsTitle);
 
-    const meldsContentDiv = document.createElement("div");
-    meldsContentDiv.id = "meldsContent";
+    const meldsContentDiv = new DivBuilder().withId("meldsContent").build();
     meldsDiv.appendChild(meldsContentDiv);
 
     if (round.provisionalMelds.size > 0) {
@@ -434,13 +331,9 @@ export function drawBoard(game: Game) {
 
     const playedTrumpCards: Card[] = round.getPlayedTrumpCards();
     if (playedTrumpCards.length > 0) {
-      const playedTrumpCardsTitle = document.createElement("div");
-      playedTrumpCardsTitle.classList.add("subtitle");
-      playedTrumpCardsTitle.textContent = "Played trump cards (" + playedTrumpCards.length + ")";
-      roundDiv.appendChild(playedTrumpCardsTitle);
+      roundDiv.appendChild(new DivBuilder().withClassList(["subtitle"]).withTextContent("Played trump cards (" + playedTrumpCards.length + ")").build());
 
-      const playedTrumpCardsDiv = document.createElement("div");
-      playedTrumpCardsDiv.id = "playedTrumpCards";
+      const playedTrumpCardsDiv = new DivBuilder().withId("playedTrumpCards").build();
       roundDiv.appendChild(playedTrumpCardsDiv);
 
       for (const card of playedTrumpCards) {
@@ -453,15 +346,40 @@ export function drawBoard(game: Game) {
 
     /* Trick */
     if (trick) {
-      const trickPointsValueSpan = document.createElement("span");
-      trickPointsValueSpan.id = "trickPointsValue";
-      trickPointsValueSpan.textContent = `${trick.computeTrickScore()}`;
-      baize.appendChild(trickPointsValueSpan);
-
+      baize.appendChild(new SpanBuilder().withId("trickPointsValue").withTextContent(trick.computeTrickScore().toString()).build());
       drawPlayedTrickDiv(trick, players, trickCardDivs);
     }
   }
 
+}
+
+function makeScoreboard(game: Game, players: Map<Position, Player>): HTMLDivElement {
+  const scoreboardDiv = new DivBuilder().withId("scoreboard").build();
+  scoreboardDiv.appendChild(new DivBuilder().withClassList(["title"]).withTextContent("Scoreboard").build());
+
+  const teamsDiv = new DivBuilder().withId("teams").build();
+  scoreboardDiv.appendChild(teamsDiv);
+
+  for (const team of game.teams) {
+    const teamScoreDiv = new DivBuilder().withClassList(["team-score"]).build();
+    teamsDiv.appendChild(teamScoreDiv);
+
+    teamScoreDiv.appendChild(new DivBuilder().withClassList(["team-points"]).withTextContent(game.scores.get(team)!.toString()).build());
+
+    const teamDetailsDiv = new DivBuilder().withClassList(["team-details"]).build();
+    teamScoreDiv.appendChild(teamDetailsDiv);
+
+    teamDetailsDiv.appendChild(new DivBuilder().withClassList(["team"]).withTextContent(team.name).build());
+
+    for (const player of team.getPlayers()) {
+      let classes = ["player"];
+      if (player.isHuman()) {
+        classes.push("human");
+      }
+      teamDetailsDiv.appendChild(new DivBuilder().withClassList(classes).withTextContent(player.name).build());
+    }
+  }
+  return scoreboardDiv;
 }
 
 function drawPlayedTrickDiv(trick: Trick, players: Map<Position, Player>, trickCardDivs: Map<Position, HTMLDivElement>) {
@@ -481,8 +399,7 @@ function drawPlayerHandsDiv(round: Round, playerAreas: Map<Position, HTMLDivElem
     const playerArea = playerAreas.get(position)!;
     const player = players.get(position)!;
 
-    const playerHand = document.createElement("div");
-    playerHand.classList.add("player-hand");
+    const playerHand = new DivBuilder().withClassList(["player-hand"]).build();
     playerArea.appendChild(playerHand);
     const playerCards: Card[] = round.playerHands.get(player)!;
     const rotated: boolean = position === Position.RIGHT || position === Position.LEFT;
@@ -504,27 +421,16 @@ function drawPlayerHandsDiv(round: Round, playerAreas: Map<Position, HTMLDivElem
 }
 
 function makeMeldDiv(player: Player, meld: Meld, definitive: boolean): HTMLDivElement {
-  const meldDiv = document.createElement("div");
-  meldDiv.classList.add("meld");
+  const meldDiv = new DivBuilder().withClassList(["meld"]).build();
 
-  const meldPlayerDiv = document.createElement("div");
-  meldPlayerDiv.classList.add("meld-player");
-  meldPlayerDiv.textContent = `${player.name}`;
-  meldDiv.appendChild(meldPlayerDiv);
+  meldDiv.appendChild(new DivBuilder().withClassList(["meld-player"]).withTextContent(player.name).build());
 
-  const meldTypeDiv = document.createElement("div");
-  meldTypeDiv.classList.add("meld-type");
-  meldTypeDiv.textContent = `${Meld.getMeldTypeString(meld.type)}`;
-  meldDiv.appendChild(meldTypeDiv);
+  meldDiv.appendChild(new DivBuilder().withClassList(["meld-type"]).withTextContent(Meld.getMeldTypeString(meld.type)).build());
 
-  const meldPointsDiv = document.createElement("div");
-  meldPointsDiv.classList.add("meld-points");
-  meldPointsDiv.textContent = `(${meld.points})`;
-  meldDiv.appendChild(meldPointsDiv);
+  meldDiv.appendChild(new DivBuilder().withClassList(["meld-points"]).withTextContent(`(${meld.points})`).build());
 
   if (definitive && meld.highestRank && meld.suit) {
-    const meldHighestCardDiv = document.createElement("div");
-    meldHighestCardDiv.classList.add("meld-highest-card");
+    const meldHighestCardDiv = new DivBuilder().withClassList(["meld-highest-card"]).build();
     meldHighestCardDiv.appendChild(makeIllustrationCardImage(new Card(meld.suit, meld.highestRank)));
     meldDiv.appendChild(meldHighestCardDiv);
   }
@@ -533,9 +439,8 @@ function makeMeldDiv(player: Player, meld: Meld, definitive: boolean): HTMLDivEl
 }
 
 function makeCardImage(card: Card, visible: boolean, rotated: boolean, allowed: boolean): HTMLDivElement {
-  const cardDiv = document.createElement("div");
-  cardDiv.classList.add("card");
-  let cardImage = document.createElement("img");
+  const cardDiv = new DivBuilder().withClassList(["card"]).build();
+  const cardImage = new ImgBuilder().build();
   if (rotated) {
     cardDiv.classList.add("card-rotated");
   } else {
@@ -569,30 +474,21 @@ function makeCardImage(card: Card, visible: boolean, rotated: boolean, allowed: 
 }
 
 function makeIllustrationCardImage(card: Card): HTMLDivElement {
-  const cardDiv = document.createElement("div");
-  cardDiv.classList.add("card", "card-small");
+  const cardDiv = new DivBuilder().withClassList(["card", "card-small"]).build();
   cardDiv.setAttribute("alt", `${card.rank} of ${card.suit}`);
-
-  let cardImage = document.createElement("img");
-  cardImage.classList.add("card-image-small");
-  cardImage.src = `${import.meta.env.BASE_URL}images/${card.rank}${SuitHelper.getSuitAbbreviation(card.suit)}.png`;
-  cardDiv.appendChild(cardImage);
-
+  cardDiv.appendChild(new ImgBuilder().withSrc(`${import.meta.env.BASE_URL}images/${card.rank}${SuitHelper.getSuitAbbreviation(card.suit)}.png`).withClassList(["card-image-small"]).build());
   return cardDiv;
 }
 
 function makePlayedCardImage(card: Card, isWinning: boolean): HTMLDivElement {
-  const cardDiv = document.createElement("div");
-  cardDiv.classList.add("card", "card-normal");
+  let classes = ["card", "card-normal"];
   if (isWinning) {
-    cardDiv.classList.add("card-winning");
+    classes.push("card-winning");
   }
+  const cardDiv = new DivBuilder().withClassList(classes).build();
   cardDiv.setAttribute("alt", `${card.rank} of ${card.suit}`);
 
-  let cardImage = document.createElement("img");
-  cardImage.classList.add("card-image");
-  cardImage.src = `${import.meta.env.BASE_URL}images/${card.rank}${SuitHelper.getSuitAbbreviation(card.suit)}.png`;
-  cardDiv.appendChild(cardImage);
+  cardDiv.appendChild(new ImgBuilder().withSrc(`${import.meta.env.BASE_URL}images/${card.rank}${SuitHelper.getSuitAbbreviation(card.suit)}.png`).withClassList(["card-image"]).build());
 
   return cardDiv;
 }

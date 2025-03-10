@@ -274,7 +274,7 @@ export function drawBoard(game: Game) {
 
   /* Scoreboard */
 
-  const scoreboardDiv = makeScoreboard(game, players);
+  const scoreboardDiv = makeScoreboard(game);
   container.appendChild(scoreboardDiv);
 
   if (round) {
@@ -353,7 +353,7 @@ export function drawBoard(game: Game) {
 
 }
 
-function makeScoreboard(game: Game, players: Map<Position, Player>): HTMLDivElement {
+function makeScoreboard(game: Game): HTMLDivElement {
   const scoreboardDiv = new DivBuilder().withId("scoreboard").build();
   scoreboardDiv.appendChild(new DivBuilder().withClassList(["title"]).withTextContent("Scoreboard").build());
 

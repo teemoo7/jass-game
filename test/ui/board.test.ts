@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   botPlayCard,
   delay,
@@ -45,7 +45,7 @@ describe("Board", () => {
 
       // when
       const cardPromise = waitForHumanPlayer(hand);
-      document.body.querySelector("#" + card1Div.id)?.click();
+      document.body.querySelector("#" + card1Div.id)?.dispatchEvent(new Event("click"));
 
       // then
       const card = await cardPromise;
@@ -59,11 +59,8 @@ describe("Board", () => {
       const card: Card = new Card(Suit.HEARTS, Rank.QUEEN);
       const player: Player = new Bot("Bot", 0);
 
-      const round: Round = {
-        currentTrick: undefined,
-        trumpSuit: Suit.HEARTS,
-        getCardToPlay: vi.fn(() => card),
-      };
+      const round: Round = getDefaultRoundMock();
+      round.getCardToPlay = vi.fn(() => card);
 
       // when
       const selectedCard: Card = await botPlayCard(player, round);
@@ -105,15 +102,16 @@ describe("Board", () => {
       (document.querySelector("#playerNameInput") as HTMLInputElement).value = playerName;
       (document.querySelector("#teamNameInput") as HTMLInputElement).value = teamName;
       document.querySelector("#botsLevelOptionMedium")?.setAttribute("selected", "selected");
-      document.querySelector("#startGameButton")?.click();
+      document.querySelector("#startGameButton")?.dispatchEvent(new Event("click"));
 
       // then
       const game = await gamePromise;
       expect(game.gameMode).toBe(gameMode);
       expect(game.teams[0].name).toBe(teamName);
       expect(game.teams[0].player1.name).toBe(playerName);
-      expect(game.teams[1].player1).toBeInstanceOf(Bot);
-      expect(game.teams[1].player1.level).toBe(botsLevel);
+      const bot = game.teams[1].player1;
+      expect(bot).toBeInstanceOf(Bot);
+      expect((bot as Bot).level).toBe(botsLevel);
     });
   });
 
@@ -125,10 +123,8 @@ describe("Board", () => {
       const canPass = false;
       const playerHands: Map<Player, Card[]> = new Map<Player, Card[]>();
       playerHands.set(player, hand);
-      const round: Round = {
-        playerHands: playerHands,
-        computeBestTrumpSuit: vi.fn(() => Suit.DIAMONDS),
-      }
+      const round: Round = getDefaultRoundMock(player, playerHands);
+      round.computeBestTrumpSuit = vi.fn(() => Suit.DIAMONDS);
       const suit = Suit.DIAMONDS;
       const appDiv = document.createElement("div");
       appDiv.id = "app";
@@ -136,7 +132,7 @@ describe("Board", () => {
 
       // when
       const trumpSuitPromise = drawTrumpDecisionDiv(round, player, canPass);
-      document.querySelector("#suit" + suit)?.click();
+      document.querySelector("#suit" + suit)?.dispatchEvent(new Event("click"));
 
       // then
       const trumpSuit = await trumpSuitPromise;
@@ -152,21 +148,17 @@ describe("Board", () => {
       playerHands.set(player, hand);
       const canPass = true;
       const teamMateSelectedSuit = Suit.HEARTS;
-      const round: Round = {
-        playerHands: playerHands,
-        computeBestTrumpSuit: vi.fn(() => Suit.DIAMONDS),
-        getTeamMate: vi.fn(() => teamMate),
-        async decideTrumpSuit(player: Player, canPass: boolean): Promise<Suit> {
-          return teamMateSelectedSuit;
-        },
-      }
+      const round: Round = getDefaultRoundMock(player, playerHands);
+      round.computeBestTrumpSuit = vi.fn(() => Suit.DIAMONDS);
+      round.getTeamMate = vi.fn(() => teamMate);
+      round.decideTrumpSuit = vi.fn(() => Promise.resolve(teamMateSelectedSuit));
       const appDiv = document.createElement("div");
       appDiv.id = "app";
       document.body.appendChild(appDiv);
 
       // when
       const trumpSuitPromise = drawTrumpDecisionDiv(round, player, canPass);
-      document.querySelector("#passButton")?.click();
+      document.querySelector("#passButton")?.dispatchEvent(new Event("click"));
 
       // then
       const trumpSuit = await trumpSuitPromise;
@@ -196,6 +188,8 @@ describe("Board", () => {
       playerHands.set(bot3, [new Card(Suit.HEARTS, Rank.SIX), new Card(Suit.DIAMONDS, Rank.TEN)]);
 
       const trick: Trick = {
+        trumpSuit: Suit.HEARTS,
+        playedCards: [],
         computeTrickScore: vi.fn(() => 2),
         computeWinningPlayedCard: vi.fn(() => undefined),
         getPlayedCardByPlayer: vi.fn(() => undefined),
@@ -207,17 +201,12 @@ describe("Board", () => {
       const definitiveMelds = new Map<Player, Meld>();
       definitiveMelds.set(player1, new Meld(20, Rank.ACE, MeldType.THREE_IN_A_ROW, Suit.CLUBS));
 
-      const round: Round = {
-        number: 0,
-        trumpSuit: Suit.HEARTS,
-        trumpDecider: player1,
-        provisionalMelds: provisionalMelds,
-        definitiveMelds: definitiveMelds,
-        playerHands: playerHands,
-        getPlayedTrumpCards: vi.fn(() => [new Card(Suit.HEARTS, Rank.QUEEN)]),
-        currentTrick: trick,
-        getAllowedCards: vi.fn(() => [new Card(Suit.HEARTS, Rank.KING), new Card(Suit.HEARTS, Rank.JACK)]),
-      };
+      const round: Round = getDefaultRoundMock(player1, playerHands);
+      round.provisionalMelds = provisionalMelds;
+      round.definitiveMelds = definitiveMelds;
+      round.getPlayedTrumpCards = vi.fn(() => [new Card(Suit.HEARTS, Rank.QUEEN)]);
+      round.currentTrick = trick;
+      round.getAllowedCards = vi.fn(() => [new Card(Suit.HEARTS, Rank.KING), new Card(Suit.HEARTS, Rank.JACK)]);
 
       const scores = new Map<Team, number>();
       scores.set(team1, 0);
@@ -226,6 +215,22 @@ describe("Board", () => {
         teams: [team1, team2],
         scores: scores,
         rounds: [round],
+        gameMode: GameMode.NORMAL,
+        targetScore: 1000,
+        resetScores: vi.fn(() => new Map<Team, number>()),
+        start: vi.fn(() => Promise.resolve()),
+        roundStart: vi.fn(() => Promise.resolve()),
+        getNextPlayer: vi.fn(() => player1),
+        getPlayerTeam: vi.fn(() => team1),
+        computePlayerMeld: vi.fn(() => undefined),
+        addWinningMeldsToTeamScores: vi.fn(),
+        getWinningMelds: vi.fn(() => definitiveMelds),
+        getHighestMeldEntry: vi.fn().mockReturnValue(definitiveMelds.entries().next().value),
+        addScore: vi.fn(),
+        addRoundScores: vi.fn(),
+        isGameOver: vi.fn(() => false),
+        getWinner: vi.fn(() => undefined),
+        prettyPrintScores: vi.fn(() => ""),
       }
 
       // when
@@ -270,3 +275,36 @@ describe("Board", () => {
     });
   });
 });
+
+function getDefaultRoundMock(player: Player = new Bot("Bot", 0), playerHands: Map<Player, Card[]> = new Map<Player, Card[]>()): Round {
+  return {
+    currentTrick: undefined,
+    trumpSuit: Suit.HEARTS,
+    getCardToPlay: vi.fn(() => new Card(Suit.HEARTS, Rank.QUEEN)),
+    playerHands: playerHands,
+    provisionalMelds: new Map<Player, Meld>(),
+    definitiveMelds: new Map<Player, Meld>(),
+    number: 0,
+    trumpDecider: player,
+    teams: [],
+    gameMode: GameMode.DOUBLED_SPADES,
+    scores: new Map<Team, number>(),
+    playedTricks: [],
+    trumpDecisionPassed: false,
+    computeBestTrumpSuit: vi.fn(() => Suit.HEARTS),
+    getPlayedTrumpCards: vi.fn(() => []),
+    getTeamMate: vi.fn(() => new Bot("Bot mate", 0)),
+    getAllowedCards: vi.fn(() => []),
+    decideTrumpSuit: vi.fn(() => Promise.resolve(Suit.HEARTS)),
+    resetScores: vi.fn(() => new Map<Team, number>()),
+    dealCardsToPlayers: vi.fn(),
+    sortHumanPlayerHand: vi.fn(),
+    generateDeck: vi.fn(),
+    shuffleDeck: vi.fn(),
+    computeStartingPlayer: vi.fn(() => player),
+    playerMightStillHaveSuit: vi.fn(() => false),
+    addScore: vi.fn(),
+    addMatchBonus: vi.fn(),
+    getOpponents: vi.fn(() => []),
+  }
+}

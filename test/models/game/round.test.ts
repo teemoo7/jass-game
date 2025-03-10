@@ -10,7 +10,6 @@ import { Trick } from "../../../src/models/game/trick.ts";
 import { PlayedCard } from "../../../src/models/game/playedcard.ts";
 import { Player } from "../../../src/models/player/player.ts";
 import { Card } from "../../../src/models/card/card.ts";
-import { Game } from "../../../src/models/game/game.ts";
 
 describe("Game Round", () => {
   describe("Constructor", () => {
